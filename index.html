@@ -37,7 +37,7 @@
     <div class="container">
         <header>
             <h1>What Should Noiseredux Play?</h1>
-            <p class="version-tag">Version 7.0.0</p>
+            <p class="version-tag">Version 7.0.2</p>
         </header>
         <div class="controls">
             <label>Select Year:</label>
@@ -61,6 +61,21 @@
         const SPORT_MULTIPLIER = 2.5;
         const AFFILIATED_MULTIPLIER = 3.75;
         const AWARD_MULTIPLIER = 1.2;
+
+        // v7.0.1: Pillar third-party boost — Square, Enix, Capcom, Konami.
+        // These four studios collectively defined the NES era, co-defined the SNES era,
+        // and then jumped ship to PS1 where they helped define that era too. Their bond
+        // with Nintendo was so deep that Nintendo published Dragon Quest, Final Fantasy,
+        // and hired Square to make Super Mario RPG. Enix and Square were rivals but
+        // shared identical relationships with Nintendo and then Sony — treated separately
+        // here since they were independent companies for most of their important history.
+        // The full-catalog treatment applies: the relationship retroactively colors
+        // everything these studios made, the same philosophy applied to Rare, FromSoftware,
+        // PlatinumGames etc. Gentle multiplier since these are mainstream studios with
+        // strong organic IGDB engagement — this is a philosophical statement rather than
+        // a structural data correction.
+        const PILLAR_PUBLISHERS = ['square', 'enix', 'capcom', 'konami'];
+        const PILLAR_MULTIPLIER = 1.5;
 
         // v5.6.8: Failure/underrepresentation corrections.
         // These boost titles whose real-world cultural footprint vastly exceeds their
@@ -501,6 +516,16 @@
             return game.platforms.some(p => WS_PLATFORM_IDS.includes(p));
         }
 
+        function isPillarTitle(game) {
+            const pubMatch = game.publishers && game.publishers.some(pub =>
+                PILLAR_PUBLISHERS.some(p => pub.toLowerCase().includes(p))
+            );
+            const devMatch = game.developers && game.developers.some(dev =>
+                PILLAR_PUBLISHERS.some(p => dev.toLowerCase().includes(p))
+            );
+            return pubMatch || devMatch;
+        }
+
         function isDigitalPicturesTitle(game) {
             if (!game.developers) return false;
             return game.developers.some(dev =>
@@ -557,6 +582,13 @@
                 // Award keyword boost
                 if (game.keywords && game.keywords.some(k => k.toLowerCase().includes('award'))) {
                     score = Math.round(score * AWARD_MULTIPLIER);
+                }
+
+                // v7.0.1: Pillar third-party boost — Square, Enix, Capcom, Konami.
+                // Gentle multiplier reflecting philosophical affiliation rather than
+                // structural data correction.
+                if (isPillarTitle(game)) {
+                    score = Math.round(score * PILLAR_MULTIPLIER);
                 }
 
                 // v5.6.8: CDi Nintendo title boost — Zelda/Mario CDi games were
