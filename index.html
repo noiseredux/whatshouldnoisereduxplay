@@ -37,7 +37,7 @@
     <div class="container">
         <header>
             <h1>What Should Noiseredux Play?</h1>
-            <p class="version-tag">Version 7.0.3</p>
+            <p class="version-tag">Version 7.0.6</p>
         </header>
         <div class="controls">
             <label>Select Year:</label>
@@ -76,6 +76,32 @@
         // a structural data correction.
         const PILLAR_PUBLISHERS = ['square', 'enix', 'capcom', 'konami'];
         const PILLAR_MULTIPLIER = 1.5;
+
+        // v7.0.4: Nintendo franchise IP boost for sanctioned non-Nintendo-published titles.
+        // Nintendo has occasionally licensed their most protected IP to outside developers —
+        // Mario + Rabbids (Ubisoft), Starlink: Battle for Atlas (Ubisoft, effectively a new
+        // Star Fox game), Cadence of Hyrule (Brace Yourself Games). These are the modern
+        // equivalent of the CDi Zelda games in terms of Nintendo lending their franchises
+        // to outside parties. IGDB data catastrophically underrepresents these titles because
+        // they don't carry Nintendo as publisher and thus get no affiliated boost, yet they
+        // are genuinely significant Nintendo franchise moments.
+        // Condition: only applies when the game is NOT already receiving the affiliated
+        // publisher boost, preventing double-boosting of first-party Nintendo titles whose
+        // slugs also contain these keywords (e.g. Mario Kart World already gets 3.75x
+        // affiliated — it doesn't need this on top).
+        // 'mario' catches Mario + Rabbids series without referencing Ubisoft's Rabbids IP.
+        // 'starlink' catches Starlink: Battle for Atlas specifically.
+        const NINTENDO_IP_SLUGS = [
+            'mario',
+            'zelda',
+            'hyrule',
+            'metroid',
+            'kirby',
+            'donkey-kong',
+            'star-fox',
+            'starlink'
+        ];
+        const NINTENDO_IP_MULTIPLIER = 5.0;
 
         // v5.6.8: Failure/underrepresentation corrections.
         // These boost titles whose real-world cultural footprint vastly exceeds their
@@ -283,7 +309,22 @@
             'perfect entertainment',
             'factor 5',
             'kitty group',
-            'technos japan'
+            'technos japan',
+
+            // TurboGrafx-16/Hudson lineage — modern era.
+            // Nicalis was founded by Tyrone Rodriguez, a former Nintendo publicist,
+            // and built entirely around bringing retro-spirited Japanese games to
+            // Nintendo platforms (WiiWare, DSiWare, 3DS, Switch). Their catalog is
+            // a love letter to the NES/SNES era. Crystal Crisis features Johnny Turbo
+            // — the TurboDuo mascot born from the NEC/Hudson joint venture — directly
+            // connecting Nicalis to the TG16 lineage. Flying Tiger Entertainment is
+            // John Brandstetter's company; Brandstetter is the real person Johnny
+            // Turbo was based on, making Flying Tiger a literal continuation of the
+            // NEC/Hudson North American marketing identity. Both companies carry the
+            // TG16 underdog spirit into the modern Nintendo ecosystem in ways that
+            // mainstream gaming coverage would never bother to document.
+            'nicalis',
+            'flying tiger'
         ];
 
         // v5.6.5: Expanded both affiliated lists with the full Nintendo and PlayStation
@@ -423,7 +464,11 @@
             'perfect entertainment',
             'factor 5',
             'kitty group',
-            'technos japan'
+            'technos japan',
+
+            // TurboGrafx-16/Hudson lineage — modern era.
+            'nicalis',
+            'flying tiger'
         ];
 
         // v5.4.8: Namco gets its own two-tier boost separate from the general affiliated
@@ -516,6 +561,11 @@
             return game.platforms.some(p => WS_PLATFORM_IDS.includes(p));
         }
 
+        function isNintendoIPTitle(game) {
+            if (!game.slug) return false;
+            return NINTENDO_IP_SLUGS.some(s => game.slug.includes(s));
+        }
+
         function isPillarTitle(game) {
             const pubMatch = game.publishers && game.publishers.some(pub =>
                 PILLAR_PUBLISHERS.some(p => pub.toLowerCase().includes(p))
@@ -589,6 +639,14 @@
                 // structural data correction.
                 if (isPillarTitle(game)) {
                     score = Math.round(score * PILLAR_MULTIPLIER);
+                }
+
+                // v7.0.4: Nintendo franchise IP boost for sanctioned non-affiliated titles.
+                // Only fires when the game is NOT already getting the affiliated publisher
+                // boost — prevents double-boosting first-party Nintendo titles.
+                // Also excludes CDi platform titles which have their own dedicated boost.
+                if (isNintendoIPTitle(game) && !isAffiliatedPublisher(game) && !isCDiNintendoTitle(game)) {
+                    score = Math.round(score * NINTENDO_IP_MULTIPLIER);
                 }
 
                 // v5.6.8: CDi Nintendo title boost — Zelda/Mario CDi games were
