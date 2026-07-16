@@ -37,7 +37,7 @@
     <div class="container">
         <header>
             <h1>What Should Noiseredux Play?</h1>
-            <p class="version-tag">Version 7.0.7</p>
+            <p class="version-tag">Version 7.0.9</p>
         </header>
         <div class="controls">
             <label>Select Year:</label>
@@ -324,7 +324,28 @@
             // TG16 underdog spirit into the modern Nintendo ecosystem in ways that
             // mainstream gaming coverage would never bother to document.
             'nicalis',
-            'flying tiger'
+            'flying tiger',
+
+            // Apple II / early Mac era defining publishers.
+            // These studios defined what Apple computer gaming meant culturally in
+            // the same way Capcom and Konami defined the NES era. MECC had a formal
+            // distribution agreement with Apple Computer. Broderbund published Lode
+            // Runner, Carmen Sandiego, and Prince of Persia — the latter created on
+            // an Apple II and now stewarded by Ubisoft, who acquired Broderbund's
+            // catalog via The Learning Company. Ubisoft's inclusion here creates a
+            // thread from Apple II (1977) through to the modern era via Prince of
+            // Persia, and is further reinforced by their Nintendo relationship through
+            // Mario + Rabbids and Starlink. Sierra On-Line, Infocom, Epyx, Sublogic,
+            // and Muse Software were the other pillars of the Apple II/Mac gaming
+            // identity — the full catalog treatment applies as always.
+            'mecc',
+            'broderbund',
+            'sierra',
+            'infocom',
+            'epyx',
+            'sublogic',
+            'muse software',
+            'ubisoft'
         ];
 
         // v5.6.5: Expanded both affiliated lists with the full Nintendo and PlayStation
@@ -468,7 +489,17 @@
 
             // TurboGrafx-16/Hudson lineage — modern era.
             'nicalis',
-            'flying tiger'
+            'flying tiger',
+
+            // Apple II / early Mac era defining publishers.
+            'mecc',
+            'broderbund',
+            'sierra',
+            'infocom',
+            'epyx',
+            'sublogic',
+            'muse software',
+            'ubisoft'
         ];
 
         // v5.4.8: Namco gets its own two-tier boost separate from the general affiliated
@@ -641,11 +672,14 @@
                     score = Math.round(score * PILLAR_MULTIPLIER);
                 }
 
-                // v7.0.4: Nintendo franchise IP boost for sanctioned non-affiliated titles.
-                // Only fires when the game is NOT already getting the affiliated publisher
-                // boost — prevents double-boosting first-party Nintendo titles.
-                // Also excludes CDi platform titles which have their own dedicated boost.
-                if (isNintendoIPTitle(game) && !isAffiliatedPublisher(game) && !isCDiNintendoTitle(game)) {
+                // v7.0.4: Nintendo franchise IP boost for sanctioned non-Nintendo-published
+                // titles. Fires when slug contains Nintendo IP AND the publisher is not
+                // already getting the affiliated boost — EXCEPT Ubisoft, who is both
+                // affiliated (via Broderbund/Apple lineage) AND a sanctioned Nintendo IP
+                // partner (Mario + Rabbids, Starlink), so deserves both boosts.
+                // CDi titles excluded since they have their own dedicated boost.
+                const isUbisoftTitle = game.publishers && game.publishers.some(p => p.toLowerCase().includes('ubisoft'));
+                if (isNintendoIPTitle(game) && (!isAffiliatedPublisher(game) || isUbisoftTitle) && !isCDiNintendoTitle(game)) {
                     score = Math.round(score * NINTENDO_IP_MULTIPLIER);
                 }
 
