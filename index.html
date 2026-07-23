@@ -37,7 +37,7 @@
     <div class="container">
         <header>
             <h1>What Should Noiseredux Play?</h1>
-            <p class="version-tag">Version 7.1.1</p>
+            <p class="version-tag">Version 7.0.9</p>
         </header>
         <div class="controls">
             <label>Select Year:</label>
@@ -624,7 +624,7 @@
             });
 
             filtered.forEach(game => {
-                let score = ((game.reviews || 0) * 3) + (game.hypes || 0);
+                let score = (game.reviews || 0) + (game.follows || 0) + (game.hypes || 0);
 
                 // Standard sports genre boost
                 if (game.genres && game.genres.includes(GENRE_SPORT_ID)) {
