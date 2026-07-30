@@ -37,7 +37,7 @@
     <div class="container">
         <header>
             <h1>What Should Noiseredux Play?</h1>
-            <p class="version-tag">Version 7.2.3</p>
+            <p class="version-tag">Version 7.3.0</p>
         </header>
         <div class="controls">
             <label>Select Year:</label>
@@ -534,6 +534,18 @@
         ];
         const MAINSTREAM_MULTIPLIER = 2.0;
 
+        // v7.3.0: Critical Darling boost. Any game with 100+ combined user/critic
+        // reviews (IGDB total_rating_count) has demonstrated real organic engagement
+        // on its own merits, independent of publisher/platform/franchise affiliation.
+        // As of v7.3.0 this applies ACROSS THE BOARD and stacks with every other
+        // multiplier in the system — see the extended rationale on isCriticalDarling()
+        // below. Deliberately the gentlest multiplier in the system, since clearing
+        // 100 reviews is itself already a strong, organic signal and doesn't need
+        // much help — it's a bonus on top of the fanboy-lens baseline, not a
+        // substitute for it.
+        const CRITICAL_DARLING_MIN_REVIEWS = 100;
+        const CRITICAL_DARLING_MULTIPLIER = 1.25;
+
         // IGDB Category Blacklist: 1=DLC, 2=Expansion, 3=Bundle, 4=Standalone Expansion, 5=Mod, 6=Episode, 7=Season
         const BLACKLISTED_CATEGORIES = [1, 2, 3, 4, 5, 6, 7];
 
@@ -612,6 +624,27 @@
             return game.developers.some(dev =>
                 DIGITAL_PICTURES_DEVELOPERS.some(d => dev.toLowerCase().includes(d))
             );
+        }
+
+        // v7.3.0: MAJOR REVISION. Critical Darling is no longer an "only if nothing
+        // else boosted you" fallback — it now applies across the board, stacking
+        // with every other multiplier in the system. Philosophy shift: v7.2.3's
+        // full multiplier stack (affiliated/pillar/Namco/Nintendo-IP/CDi/VB/WS/
+        // Digital Pictures/etc) is treated as the correct baseline lens for
+        // "hype through a Sony/Nintendo/Apple fanboy's eyes," and Critical Darling
+        // is a separate, orthogonal axis layered on top: "did this ALSO prove
+        // itself with the crowd (100+ combined user/critic reviews)." Since it's
+        // a flat multiplier applied uniformly to every game that clears the
+        // threshold, it does not change relative ordering among games that all
+        // clear it — it only widens the gap between games that have broken
+        // through with reviewers/players and those that haven't, regardless of
+        // publisher/platform/franchise affiliation. Rollback note: if this
+        // distorts results (e.g. CDi Zelda titles never clearing 100 reviews and
+        // therefore never benefiting, while big well-reviewed titles stack an
+        // extra 1.25x on top of already-large multipliers), revert to the
+        // v7.2.5 exclusion-list version.
+        function isCriticalDarling(game) {
+            return !!game.reviews && game.reviews >= CRITICAL_DARLING_MIN_REVIEWS;
         }
 
         function displayGames(gamesList) {
@@ -707,6 +740,13 @@
                 // Enormous real-world cultural footprint, near-zero IGDB engagement.
                 if (isDigitalPicturesTitle(game)) {
                     score = Math.round(score * DIGITAL_PICTURES_MULTIPLIER);
+                }
+
+                // v7.2.4: Critical Darling boost. Only fires for games that received
+                // NONE of the boosts above — a 100+ review count on its own merits,
+                // untouched by genre, franchise, publisher, or platform corrections.
+                if (isCriticalDarling(game)) {
+                    score = Math.round(score * CRITICAL_DARLING_MULTIPLIER);
                 }
 
                 game.hype_score = score;
