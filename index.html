@@ -37,7 +37,7 @@
     <div class="container">
         <header>
             <h1>What Should Noiseredux Play?</h1>
-            <p class="version-tag">Version 7.3.0</p>
+            <p class="version-tag">Version 7.4.2</p>
         </header>
         <div class="controls">
             <label>Select Year:</label>
@@ -59,7 +59,20 @@
         // --- Scoring constants ---
         const GENRE_SPORT_ID = 14;
         const SPORT_MULTIPLIER = 2.5;
-        const AFFILIATED_MULTIPLIER = 3.75;
+        // v7.4.2: Nintendo multiplier recalibrated again to 2.2x Sony's rate
+        // (3.75 * 2.2 = 8.25). Rationale: two independent test cases converged on
+        // roughly this same ratio — Animal Crossing: New Horizons needing ~2.22x
+        // to clear Ghost of Tsushima (2020), and Super Mario Odyssey needing ~2.18x
+        // to clear NieR: Automata (2017) — landing within a hair of each other
+        // despite being completely different years and matchups. Note: the NieR
+        // comparison is influenced by NieR also receiving the separate Pillar boost
+        // (Square Enix as publisher) stacked on top of its Sony-affiliated
+        // multiplier (PlatinumGames as developer); that stacking is accepted
+        // project philosophy as of this version, so the 2.2x figure is calibrated
+        // against the real, current scoring behavior rather than a hypothetical
+        // unstacked baseline. Supersedes the 1.75x ratio from v7.4.1.
+        const NINTENDO_AFFILIATED_MULTIPLIER = 8.25;
+        const SONY_AFFILIATED_MULTIPLIER = 3.75;
         const AWARD_MULTIPLIER = 1.2;
 
         // v7.0.1: Pillar third-party boost — Square, Enix, Capcom, Konami.
@@ -172,7 +185,17 @@
         // acquired during that era), Polyphony, Naughty Dog, Insomniac, Guerrilla,
         // CSG/Sony Imagesoft (the early US publishing arm), and all current
         // PlayStation Studios subsidiaries.
-        const AFFILIATED_PUBLISHERS = [
+        // v7.4.0: Split into NINTENDO_AFFILIATED_PUBLISHERS and
+        // SONY_AFFILIATED_PUBLISHERS along the lineage boundaries the section
+        // comments below already establish. NOTE ON APPLE: the site treats Apple
+        // as a third fandom pillar in its branding/footer, but there has never
+        // been a dedicated Apple multiplier in this codebase — the 'apple' entry
+        // and the Apple II/Mac-era publisher block were always folded into the
+        // shared affiliated list. They stay bundled into the SONY bucket here
+        // (not a new third bucket) purely to preserve existing behavior for
+        // those titles; this was not something the Nintendo/Sony split was asked
+        // to address. Revisit as its own decision if desired.
+        const NINTENDO_AFFILIATED_PUBLISHERS = [
             // Nintendo lineage
             'nintendo',
             'hal laboratory',
@@ -214,6 +237,23 @@
             'team ninja',
             'platinumgames',
 
+            // TurboGrafx-16/Hudson lineage — modern era.
+            // Nicalis was founded by Tyrone Rodriguez, a former Nintendo publicist,
+            // and built entirely around bringing retro-spirited Japanese games to
+            // Nintendo platforms (WiiWare, DSiWare, 3DS, Switch). Their catalog is
+            // a love letter to the NES/SNES era. Crystal Crisis features Johnny Turbo
+            // — the TurboDuo mascot born from the NEC/Hudson joint venture — directly
+            // connecting Nicalis to the TG16 lineage. Flying Tiger Entertainment is
+            // John Brandstetter's company; Brandstetter is the real person Johnny
+            // Turbo was based on, making Flying Tiger a literal continuation of the
+            // NEC/Hudson North American marketing identity. Both companies carry the
+            // TG16 underdog spirit into the modern Nintendo ecosystem in ways that
+            // mainstream gaming coverage would never bother to document.
+            'nicalis',
+            'flying tiger'
+        ];
+
+        const SONY_AFFILIATED_PUBLISHERS = [
             // Sony lineage
             'sony',
             'csg imagesoft',
@@ -311,21 +351,6 @@
             'kitty group',
             'technos japan',
 
-            // TurboGrafx-16/Hudson lineage — modern era.
-            // Nicalis was founded by Tyrone Rodriguez, a former Nintendo publicist,
-            // and built entirely around bringing retro-spirited Japanese games to
-            // Nintendo platforms (WiiWare, DSiWare, 3DS, Switch). Their catalog is
-            // a love letter to the NES/SNES era. Crystal Crisis features Johnny Turbo
-            // — the TurboDuo mascot born from the NEC/Hudson joint venture — directly
-            // connecting Nicalis to the TG16 lineage. Flying Tiger Entertainment is
-            // John Brandstetter's company; Brandstetter is the real person Johnny
-            // Turbo was based on, making Flying Tiger a literal continuation of the
-            // NEC/Hudson North American marketing identity. Both companies carry the
-            // TG16 underdog spirit into the modern Nintendo ecosystem in ways that
-            // mainstream gaming coverage would never bother to document.
-            'nicalis',
-            'flying tiger',
-
             // Apple II / early Mac era defining publishers.
             // These studios defined what Apple computer gaming meant culturally in
             // the same way Capcom and Konami defined the NES era. MECC had a formal
@@ -365,7 +390,7 @@
         // not here, since it should receive the Namco boost rather than the flat
         // affiliated rate. Bandai Namco Studios itself is excluded from this list
         // entirely since it's already covered by the separate Namco-specific boost.
-        const AFFILIATED_DEVELOPERS = [
+        const NINTENDO_AFFILIATED_DEVELOPERS = [
             // Nintendo lineage
             'nintendo',
             'hal laboratory',
@@ -407,6 +432,12 @@
             'team ninja',
             'platinumgames',
 
+            // TurboGrafx-16/Hudson lineage — modern era.
+            'nicalis',
+            'flying tiger'
+        ];
+
+        const SONY_AFFILIATED_DEVELOPERS = [
             // Sony lineage
             'sony',
             'apple',
@@ -486,10 +517,6 @@
             'factor 5',
             'kitty group',
             'technos japan',
-
-            // TurboGrafx-16/Hudson lineage — modern era.
-            'nicalis',
-            'flying tiger',
 
             // Apple II / early Mac era defining publishers.
             'mecc',
@@ -578,14 +605,35 @@
             return publisherMatch || developerMatch;
         }
 
-        function isAffiliatedPublisher(game) {
+        // v7.4.0: isAffiliatedPublisher is now split into isNintendoAffiliated and
+        // isSonyAffiliated, each checking against its own publisher/developer list
+        // so the two lineages can carry different multipliers. isAffiliatedPublisher
+        // is kept as a combined helper (Nintendo OR Sony) for the handful of places
+        // that only need to know "is this game affiliated with either lineage at
+        // all" — e.g. the Nintendo-IP-licensed-to-third-parties exclusion check,
+        // which shouldn't fire twice regardless of which lineage a title belongs to.
+        function isNintendoAffiliated(game) {
             const publisherMatch = game.publishers && game.publishers.some(pub =>
-                AFFILIATED_PUBLISHERS.some(aff => pub.toLowerCase().includes(aff))
+                NINTENDO_AFFILIATED_PUBLISHERS.some(aff => pub.toLowerCase().includes(aff))
             );
             const developerMatch = game.developers && game.developers.some(dev =>
-                AFFILIATED_DEVELOPERS.some(aff => dev.toLowerCase().includes(aff))
+                NINTENDO_AFFILIATED_DEVELOPERS.some(aff => dev.toLowerCase().includes(aff))
             );
             return publisherMatch || developerMatch;
+        }
+
+        function isSonyAffiliated(game) {
+            const publisherMatch = game.publishers && game.publishers.some(pub =>
+                SONY_AFFILIATED_PUBLISHERS.some(aff => pub.toLowerCase().includes(aff))
+            );
+            const developerMatch = game.developers && game.developers.some(dev =>
+                SONY_AFFILIATED_DEVELOPERS.some(aff => dev.toLowerCase().includes(aff))
+            );
+            return publisherMatch || developerMatch;
+        }
+
+        function isAffiliatedPublisher(game) {
+            return isNintendoAffiliated(game) || isSonyAffiliated(game);
         }
 
         function isCDiNintendoTitle(game) {
@@ -678,11 +726,14 @@
                     score = Math.round(score * MAINSTREAM_MULTIPLIER);
                 }
 
-                // v5.4.0: Affiliated publisher boost — covers the full Nintendo and Sony
-                // lineages including second-party and historically close studios.
-                // Replaces the narrower first-party check from v5.2.0.
-                if (isAffiliatedPublisher(game)) {
-                    score = Math.round(score * AFFILIATED_MULTIPLIER);
+                // v7.4.0: Affiliated publisher boost — now split by lineage. A game
+                // affiliated with both lists (shouldn't happen given how the lists are
+                // partitioned, but handled safely via else-if) gets the Nintendo rate,
+                // since Nintendo affiliation is checked first.
+                if (isNintendoAffiliated(game)) {
+                    score = Math.round(score * NINTENDO_AFFILIATED_MULTIPLIER);
+                } else if (isSonyAffiliated(game)) {
+                    score = Math.round(score * SONY_AFFILIATED_MULTIPLIER);
                 }
 
                 // v5.4.8: Namco-specific additional boost applied after the base affiliated
@@ -742,9 +793,10 @@
                     score = Math.round(score * DIGITAL_PICTURES_MULTIPLIER);
                 }
 
-                // v7.2.4: Critical Darling boost. Only fires for games that received
-                // NONE of the boosts above — a 100+ review count on its own merits,
-                // untouched by genre, franchise, publisher, or platform corrections.
+                // v7.3.0: Critical Darling boost. Applies across the board and stacks
+                // with every boost above — a flat reward for clearing 100+ combined
+                // user/critic reviews, layered on top of the fanboy-lens baseline
+                // rather than only catching titles nothing else touched.
                 if (isCriticalDarling(game)) {
                     score = Math.round(score * CRITICAL_DARLING_MULTIPLIER);
                 }
