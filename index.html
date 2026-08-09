@@ -37,7 +37,7 @@
     <div class="container">
         <header>
             <h1>What Should Noiseredux Play?</h1>
-            <p class="version-tag">Version 7.4.3</p>
+            <p class="version-tag">Version 7.6.1</p>
         </header>
         <div class="controls">
             <label>Select Year:</label>
@@ -601,6 +601,17 @@
         const CRITICAL_DARLING_MIN_REVIEWS = 100;
         const CRITICAL_DARLING_MULTIPLIER = 1.25;
 
+        // v7.6.0: PopScore is an ADDITIVE base-score contributor, same tier as
+        // reviews/follows/hypes, rather than a multiplier — a multiplier can never
+        // rescue a game whose legacy engagement fields are all zero (e.g. Marvel
+        // Tokon), since anything times zero is still zero. POP_SCORE_BASE_WEIGHT
+        // scales PopScore's tiny relative decimals (typically ~0.0001, up to
+        // ~0.002-0.003 for the biggest titles) up into the same rough numeric
+        // range as the rest of the base formula. This is an untested starting
+        // point, same as every other constant here — needs real-year comparison
+        // to calibrate.
+        const POP_SCORE_BASE_WEIGHT = 1000000;
+
         // IGDB Category Blacklist: 1=DLC, 2=Expansion, 3=Bundle, 4=Standalone Expansion, 5=Mod, 6=Episode, 7=Season
         const BLACKLISTED_CATEGORIES = [1, 2, 3, 4, 5, 6, 7];
 
@@ -733,7 +744,7 @@
             });
 
             filtered.forEach(game => {
-                let score = ((game.reviews || 0) * 3) + (game.follows || 0) + (game.hypes || 0);
+                let score = ((game.reviews || 0) * 3) + (game.follows || 0) + (game.hypes || 0) + ((game.popScore || 0) * POP_SCORE_BASE_WEIGHT);
 
                 // Standard sports genre boost
                 if (game.genres && game.genres.includes(GENRE_SPORT_ID)) {
@@ -854,9 +865,9 @@
                     <div class="game-image-container">${game.cover ? `<img class="game-image" src="${coverUrl}" alt="${game.name} cover">` : ''}</div>
                     <div class="game-info">
                         <div class="game-title">${game.name}</div>
-                        <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase;">
-                            Hype Score: <span class="engagement-value">${game.hype_score}</span>
-                        </div>
+                        <!-- <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase;">
+    Hype Score: <span class="engagement-value">${game.hype_score}</span>
+</div> -->
                         <div style="margin-top: 4px;">
                             ${game.platforms.filter(id => ALLOWED_PLATFORMS.includes(id)).map(id => `<span class="platform-tag">${PLATFORM_NAMES[id] || id}</span>`).join('')}
                         </div>
