@@ -37,7 +37,7 @@
     <div class="container">
         <header>
             <h1>What Should Noiseredux Play?</h1>
-            <p class="version-tag">Version 7.6.1</p>
+            <p class="version-tag">Version 7.7.1</p>
         </header>
         <div class="controls">
             <label>Select Year:</label>
@@ -382,6 +382,54 @@
             'muse software',
             'ubisoft',
 
+            // v7.7.0: Games confirmed bundled directly with Apple II/Mac hardware —
+            // pack-ins, not just software that happened to run on the platform.
+            // Same "shipped in the box" logic as Sega bundling Sewer Shark with the
+            // Sega CD. Myst (Cyan/Broderbund) was packed with many CD-ROM-equipped
+            // Performa and Power Macintosh models starting 1993-94 — notable given
+            // Myst itself was built in HyperCard, an Apple technology. Pangea
+            // Software is the strongest case: Apple signed a formal deal with them
+            // in 1995 to bundle their games with new Macs, lasting until the 2006
+            // Intel transition (Power Pete, later Bugdom, Nanosaur, Cro-Mag Rally,
+            // Otto Matic). Callisto Corporation (Spin Doctor, Super Maze Wars) and
+            // Velocity (Spectre, Spectre Supreme, developed by Peninsula Gameworks
+            // and Green Dragon Creations respectively) were both pre-installed
+            // across many Performa models. Edmark (Millie's Math House, Thinkin'
+            // Things, developed by Theatrix Interactive) shipped with most
+            // family-oriented Performa units. Disney Interactive (Aladdin Activity
+            // Center, Lion King Animated Storybook, developed by Gryphon Software)
+            // is included on the same full-catalog logic as everything else here —
+            // and there's a real thread to lean on: Pixar's Steve Jobs connection
+            // makes Disney Interactive something like Pixar's own LucasArts.
+            // DMA Design (Lemmings, bundled with many Performa and Quadra models)
+            // is the deepest cut: DMA's early games were published by Psygnosis —
+            // who became Sony's first acquisition when Sony launched its own
+            // first-party studio for Sega CD and eventually PS1 — meaning Lemmings'
+            // bundling threads directly into both the Apple and Sony sides of this
+            // project's entire multi-year lens simultaneously.
+            'cyan worlds',
+            'pangea software',
+            'callisto corporation',
+            'velocity development',
+            'velocity inc',
+            'peninsula gameworks',
+            'green dragon creations',
+            'edmark',
+            'theatrix interactive',
+            'disney interactive',
+            'dma design',
+
+            // v7.7.1: Rockstar North — DMA Design's later identity after its 2002
+            // rename. Per project philosophy applied consistently everywhere else
+            // (Rare, FromSoftware, PlatinumGames, etc.): once a studio's lineage
+            // earns a place in the Apple/Nintendo/Sony story, that thread is
+            // tracked forward permanently, not just for the era it was earned in.
+            // DMA Design's Lemmings was bundled with many Performa/Quadra models;
+            // that studio is Rockstar North today. In practice this barely moves
+            // any ranking — Grand Theft Auto doesn't need the help — but the
+            // consistency of the rule matters more than the practical effect.
+            'rockstar north',
+
             // v7.4.3: Q-Games. Founded by ex-Argonaut programmer Dylan Cuthbert
             // after his time at Sony Computer Entertainment (where he developed
             // the influential "ducks in a bath" PS2 tech demo and Blasto).
@@ -552,6 +600,24 @@
             'sublogic',
             'muse software',
             'ubisoft',
+
+            // v7.7.0: Apple/Mac hardware-bundled game developers — see full
+            // rationale in SONY_AFFILIATED_PUBLISHERS above.
+            'cyan worlds',
+            'pangea software',
+            'callisto corporation',
+            'velocity development',
+            'velocity inc',
+            'peninsula gameworks',
+            'green dragon creations',
+            'edmark',
+            'theatrix interactive',
+            'disney interactive',
+            'dma design',
+
+            // v7.7.1: Rockstar North — see rationale in SONY_AFFILIATED_PUBLISHERS
+            // above.
+            'rockstar north',
 
             // v7.4.3: Q-Games — see rationale in SONY_AFFILIATED_PUBLISHERS above.
             'q-games'
@@ -866,8 +932,8 @@
                     <div class="game-info">
                         <div class="game-title">${game.name}</div>
                         <!-- <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase;">
-    Hype Score: <span class="engagement-value">${game.hype_score}</span>
-</div> -->
+                            Hype Score: <span class="engagement-value">${game.hype_score}</span>
+                        </div> -->
                         <div style="margin-top: 4px;">
                             ${game.platforms.filter(id => ALLOWED_PLATFORMS.includes(id)).map(id => `<span class="platform-tag">${PLATFORM_NAMES[id] || id}</span>`).join('')}
                         </div>
