@@ -37,7 +37,7 @@
     <div class="container">
         <header>
             <h1>What Should Noiseredux Play?</h1>
-            <p class="version-tag">Version 7.7.2</p>
+            <p class="version-tag">Version 7.8.0</p>
         </header>
         <div class="controls">
             <label>Select Year:</label>
@@ -685,16 +685,17 @@
         const CRITICAL_DARLING_MIN_REVIEWS = 100;
         const CRITICAL_DARLING_MULTIPLIER = 1.25;
 
-        // v7.6.0: PopScore is an ADDITIVE base-score contributor, same tier as
-        // reviews/follows/hypes, rather than a multiplier — a multiplier can never
-        // rescue a game whose legacy engagement fields are all zero (e.g. Marvel
-        // Tokon), since anything times zero is still zero. POP_SCORE_BASE_WEIGHT
-        // scales PopScore's tiny relative decimals (typically ~0.0001, up to
-        // ~0.002-0.003 for the biggest titles) up into the same rough numeric
-        // range as the rest of the base formula. This is an untested starting
-        // point, same as every other constant here — needs real-year comparison
-        // to calibrate.
-        const POP_SCORE_BASE_WEIGHT = 1000000;
+        // v7.8.0: PopScore (v7.5.0-v7.7.x) has been removed from scoring. It was
+        // an additive base-score contributor sourced from IGDB's
+        // popularity_primitives endpoint (Want to Play/Playing/Played), but proved
+        // too volatile day-to-day for a stable ranking — since the values are
+        // normalized shares of total catalog activity, a single major release
+        // entering the pool can visibly shrink every other game's score on a
+        // given day with no underlying change in that game's real popularity.
+        // The backend fetch has also been removed (see backend v5.3.0) since
+        // there's no reason to pay the extra API round-trip for data that's no
+        // longer used. If PopScore is ever revisited, the removed logic is
+        // preserved in version history rather than reconstructed from scratch.
 
         // IGDB Category Blacklist: 1=DLC, 2=Expansion, 3=Bundle, 4=Standalone Expansion, 5=Mod, 6=Episode, 7=Season
         const BLACKLISTED_CATEGORIES = [1, 2, 3, 4, 5, 6, 7];
@@ -828,7 +829,7 @@
             });
 
             filtered.forEach(game => {
-                let score = ((game.reviews || 0) * 3) + (game.follows || 0) + (game.hypes || 0) + ((game.popScore || 0) * POP_SCORE_BASE_WEIGHT);
+                let score = ((game.reviews || 0) * 3) + (game.follows || 0) + (game.hypes || 0);
 
                 // Standard sports genre boost
                 if (game.genres && game.genres.includes(GENRE_SPORT_ID)) {
