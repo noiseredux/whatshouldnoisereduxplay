@@ -37,7 +37,7 @@
     <div class="container">
         <header>
             <h1>What Should Noiseredux Play?</h1>
-            <p class="version-tag">Version 7.8.0</p>
+            <p class="version-tag">Version 7.9.0</p>
         </header>
         <div class="controls">
             <label>Select Year:</label>
@@ -260,7 +260,28 @@
             // published, Nintendo EAD/Argonaut co-developed title, followed by
             // the unreleased-until-2017 Star Fox 2. Same tier of relationship as
             // Rare, arguably deeper given the custom hardware collaboration.
-            'argonaut'
+            'argonaut',
+
+            // v7.9.0: The Software Toolworks / Mindscape edutainment-Mario cluster.
+            // Nintendo licensed the Mario characters (though not the studio's
+            // involvement in development) to The Software Toolworks for Mario Is
+            // Missing! (1993, later ported to Mac in 1994), Mario's Time Machine
+            // (1993), and the Mario's Early Years! trilogy. Software Toolworks
+            // acquired Mindscape in 1990 largely FOR its Nintendo licensing rights,
+            // and was itself rebranded Mindscape in 1994 — both names covered here.
+            // Per full-catalog philosophy, the same licensing relationship extends
+            // to the other studios Nintendo licensed Mario out to for this same
+            // edutainment wave: Interplay (Mario Teaches Typing 1 & 2, the latter
+            // via Interplay's internal Brainstorm division — not added separately,
+            // since it wasn't a distinct legal company and 'interplay' already
+            // covers its games), Radical Entertainment (NES ports of Mario Is
+            // Missing! and Mario's Time Machine), and Knowledge Adventure
+            // (MS-DOS/Windows Mario's Time Machine).
+            'software toolworks',
+            'mindscape',
+            'interplay',
+            'radical entertainment',
+            'knowledge adventure'
         ];
 
         const SONY_AFFILIATED_PUBLISHERS = [
@@ -525,7 +546,15 @@
 
             // v7.4.3: Argonaut Software — see rationale in
             // NINTENDO_AFFILIATED_PUBLISHERS above.
-            'argonaut'
+            'argonaut',
+
+            // v7.9.0: Mario edutainment licensing cluster — see full rationale in
+            // NINTENDO_AFFILIATED_PUBLISHERS above.
+            'software toolworks',
+            'mindscape',
+            'interplay',
+            'radical entertainment',
+            'knowledge adventure'
         ];
 
         const SONY_AFFILIATED_DEVELOPERS = [
