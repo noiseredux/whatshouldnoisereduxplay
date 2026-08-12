@@ -37,7 +37,7 @@
     <div class="container">
         <header>
             <h1>What Should Noiseredux Play?</h1>
-            <p class="version-tag">Version 7.9.1</p>
+            <p class="version-tag">Version 7.9.2</p>
         </header>
         <div class="controls">
             <label>Select Year:</label>
@@ -195,6 +195,12 @@
         // (not a new third bucket) purely to preserve existing behavior for
         // those titles; this was not something the Nintendo/Sony split was asked
         // to address. Revisit as its own decision if desired.
+        //
+        // v7.9.2 recognizes Acclaim/LJN's uniquely close, highly strategic relationship
+        // with Nintendo during the NES and SNES eras that genuinely elevated its status
+        // above almost every other third-party competitor. (Acclaim was Nintendo's first
+        // American third-party licensee; Until the early 90s, virtually all of Acclaim's 
+        // revenue was derived from Nintendo platforms).
         const NINTENDO_AFFILIATED_PUBLISHERS = [
             // Nintendo lineage
             'nintendo',
@@ -238,6 +244,8 @@
             'omega force',
             'team ninja',
             'platinumgames',
+            'acclaim',
+            'ljn',
 
             // TurboGrafx-16/Hudson lineage — modern era.
             // Nicalis was founded by Tyrone Rodriguez, a former Nintendo publicist,
