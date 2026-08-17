@@ -37,7 +37,7 @@
     <div class="container">
         <header>
             <h1>What Should Noiseredux Play?</h1>
-            <p class="version-tag">Version 7.9.7</p>
+            <p class="version-tag">Version 7.9.8</p>
         </header>
         <div class="controls">
             <label>Select Year:</label>
@@ -73,7 +73,6 @@
         // unstacked baseline. Supersedes the 1.75x ratio from v7.4.1.
         const NINTENDO_AFFILIATED_MULTIPLIER = 8.25;
         const SONY_AFFILIATED_MULTIPLIER = 3.75;
-        const AWARD_MULTIPLIER = 1.2;
 
         // v7.0.1: Pillar third-party boost — Square, Enix, Capcom, Konami.
         // These four studios collectively defined the NES era, co-defined the SNES era,
@@ -911,23 +910,27 @@
             );
         }
 
-        // v7.3.0: MAJOR REVISION. Critical Darling is no longer an "only if nothing
-        // else boosted you" fallback — it now applies across the board, stacking
-        // with every other multiplier in the system. Philosophy shift: v7.2.3's
-        // full multiplier stack (affiliated/pillar/Namco/Nintendo-IP/CDi/VB/WS/
-        // Digital Pictures/etc) is treated as the correct baseline lens for
-        // "hype through a Sony/Nintendo/Apple fanboy's eyes," and Critical Darling
-        // is a separate, orthogonal axis layered on top: "did this ALSO prove
-        // itself with the crowd (100+ combined user/critic reviews)." Since it's
-        // a flat multiplier applied uniformly to every game that clears the
-        // threshold, it does not change relative ordering among games that all
-        // clear it — it only widens the gap between games that have broken
-        // through with reviewers/players and those that haven't, regardless of
-        // publisher/platform/franchise affiliation. Rollback note: if this
-        // distorts results (e.g. CDi Zelda titles never clearing 100 reviews and
-        // therefore never benefiting, while big well-reviewed titles stack an
-        // extra 1.25x on top of already-large multipliers), revert to the
-        // v7.2.5 exclusion-list version.
+        // v7.9.8: REVERTED to exclusion-list behavior (pre-v7.3.0). Critical
+        // Darling now only applies when no other multiplier in the system has
+        // fired for this title — it no longer stacks with affiliated/Pillar/
+        // Namco/Sega/Nintendo-IP/CDi/VB/WS/Digital Pictures boosts. Rationale:
+        // with Namco and Sega recalibrated upward (v7.9.7) to sit closer to
+        // Ubisoft's standalone rate, letting Critical Darling stack on top of
+        // those already-large multipliers risked over-separating top-tier
+        // affiliated titles from each other on a dimension (organic reviews)
+        // that the affiliated boost isn't meant to measure in the first place.
+        // Reverting to exclusion-only keeps quality-based differentiation for
+        // completely unaffiliated titles (Clair Obscur, Balatro, Hades, Animal
+        // Well) — the "proved itself with the crowd, no franchise/publisher
+        // help needed" case this boost was originally built for — while
+        // affiliated titles are judged purely on their affiliation tier.
+        // Known trade-off, explicitly accepted: two titles from the same
+        // affiliated bucket (e.g. two Nintendo-affiliated games) with identical
+        // base engagement but very different reception will now score
+        // identically on this axis, since the affiliated boost already fired
+        // and blocks Critical Darling from adding anything further. If that
+        // proves to be a problem in practice, the v7.3.0 stacking version is
+        // preserved in version history.
         function isCriticalDarling(game) {
             return !!game.reviews && game.reviews >= CRITICAL_DARLING_MIN_REVIEWS;
         }
@@ -943,16 +946,21 @@
 
             filtered.forEach(game => {
                 let score = ((game.reviews || 0) * 3) + (game.follows || 0) + (game.hypes || 0);
+                // v7.9.8: tracks whether ANY other multiplier fired for this title,
+                // so Critical Darling can be gated to exclusion-only below.
+                let hasOtherBoost = false;
 
                 // Standard sports genre boost
                 if (game.genres && game.genres.includes(GENRE_SPORT_ID)) {
                     score = Math.round(score * SPORT_MULTIPLIER);
+                    hasOtherBoost = true;
                 }
 
                 // v5.3.0: Additional major league boost for chronically underrepresented
                 // console-dominant sports franchises. Applied after sports multiplier.
                 if (isMajorLeagueTitle(game)) {
                     score = Math.round(score * MAJOR_LEAGUE_MULTIPLIER);
+                    hasOtherBoost = true;
                 }
 
                 // v5.4.4: Mainstream title boost for franchises with massive cultural
@@ -961,6 +969,7 @@
                 // underrepresented relative to their true "everyone is playing this" footprint.
                 if (isMainstreamTitle(game)) {
                     score = Math.round(score * MAINSTREAM_MULTIPLIER);
+                    hasOtherBoost = true;
                 }
 
                 // v7.4.0: Affiliated publisher boost — now split by lineage. A game
@@ -969,16 +978,19 @@
                 // since Nintendo affiliation is checked first.
                 if (isNintendoAffiliated(game)) {
                     score = Math.round(score * NINTENDO_AFFILIATED_MULTIPLIER);
+                    hasOtherBoost = true;
                 } else if (isSonyAffiliated(game)) {
                     score = Math.round(score * SONY_AFFILIATED_MULTIPLIER);
+                    hasOtherBoost = true;
                 }
 
                 // v5.4.8: Namco-specific additional boost applied after the base affiliated
                 // multiplier. Namco is handled separately because its Sony relationship
                 // is uniquely deep (PS1 hardware co-development, launch titles) but stops
-                // short of full ownership. Effective total: 3.0x × 2.0x = 6.0x.
+                // short of full ownership.
                 if (isNamcoTitle(game)) {
                     score = Math.round(score * NAMCO_MULTIPLIER);
+                    hasOtherBoost = true;
                 }
 
                 // v7.9.7: Sega/Atlus-specific boost, stacked on the same terms as
@@ -986,11 +998,7 @@
                 // Nintendo affiliated lists. See rationale on SEGA_PUBLISHERS above.
                 if (isSegaTitle(game)) {
                     score = Math.round(score * SEGA_MULTIPLIER);
-                }
-
-                // Award keyword boost
-                if (game.keywords && game.keywords.some(k => k.toLowerCase().includes('award'))) {
-                    score = Math.round(score * AWARD_MULTIPLIER);
+                    hasOtherBoost = true;
                 }
 
                 // v7.0.1: Pillar third-party boost — Square, Enix, Capcom, Konami.
@@ -998,6 +1006,7 @@
                 // structural data correction.
                 if (isPillarTitle(game)) {
                     score = Math.round(score * PILLAR_MULTIPLIER);
+                    hasOtherBoost = true;
                 }
 
                 // v7.0.4: Nintendo franchise IP boost for sanctioned non-Nintendo-published
@@ -1009,24 +1018,28 @@
                 const isUbisoftTitle = game.publishers && game.publishers.some(p => p.toLowerCase().includes('ubisoft'));
                 if (isNintendoIPTitle(game) && (!isAffiliatedPublisher(game) || isUbisoftTitle) && !isCDiNintendoTitle(game)) {
                     score = Math.round(score * NINTENDO_IP_MULTIPLIER);
+                    hasOtherBoost = true;
                 }
 
                 // v5.6.8: CDi Nintendo title boost — Zelda/Mario CDi games were
                 // massive cultural moments despite poor quality and near-zero IGDB data.
                 if (isCDiNintendoTitle(game)) {
                     score = Math.round(score * CDI_MULTIPLIER);
+                    hasOtherBoost = true;
                 }
 
                 // v5.6.8: Virtual Boy platform boost — loud, expensive, heavily marketed
                 // failure. Every 1995 Nintendo kid knew about this hardware.
                 if (isVirtualBoyTitle(game)) {
                     score = Math.round(score * VB_MULTIPLIER);
+                    hasOtherBoost = true;
                 }
 
                 // v5.6.8: WonderSwan/WSC platform boost — genuine Japanese success with
                 // Nintendo/Sony/Namco DNA. IGDB's Western bias makes data near-zero.
                 if (isWonderSwanTitle(game)) {
                     score = Math.round(score * WS_MULTIPLIER);
+                    hasOtherBoost = true;
                 }
 
                 // v5.6.9: Digital Pictures developer boost. Sony-founded FMV studio
@@ -1035,13 +1048,13 @@
                 // Enormous real-world cultural footprint, near-zero IGDB engagement.
                 if (isDigitalPicturesTitle(game)) {
                     score = Math.round(score * DIGITAL_PICTURES_MULTIPLIER);
+                    hasOtherBoost = true;
                 }
 
-                // v7.3.0: Critical Darling boost. Applies across the board and stacks
-                // with every boost above — a flat reward for clearing 100+ combined
-                // user/critic reviews, layered on top of the fanboy-lens baseline
-                // rather than only catching titles nothing else touched.
-                if (isCriticalDarling(game)) {
+                // v7.9.8: Critical Darling boost — REVERTED to exclusion-only. Only
+                // applies if nothing else above boosted this title. See extended
+                // rationale on isCriticalDarling() above.
+                if (!hasOtherBoost && isCriticalDarling(game)) {
                     score = Math.round(score * CRITICAL_DARLING_MULTIPLIER);
                 }
 
