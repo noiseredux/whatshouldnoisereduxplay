@@ -37,7 +37,7 @@
     <div class="container">
         <header>
             <h1>What Should Noiseredux Play?</h1>
-            <p class="version-tag">Version 7.9.6</p>
+            <p class="version-tag">Version 7.9.7</p>
         </header>
         <div class="controls">
             <label>Select Year:</label>
@@ -701,9 +701,20 @@
         // in Western territories. However Namco was never owned by Sony, so it sits in
         // its own category: above general third parties but handled separately from the
         // core Nintendo/Sony owned studios.
-        // Effective multiplier: 3.0x (affiliated) × 2.0x (Namco) = 6.0x total.
         // This also addresses the early PS1 Tekken/Ridge Racer data sparsity problem
         // identified during calibration.
+        // v7.9.7: Recalibrated from 1.5x to 2.5x. Anchor case: Tekken 8 in 2024,
+        // Namco's flagship-tier franchise the same way Zelda is for Nintendo, was
+        // landing at #36 (739) even with the boost applied — well below where a
+        // "deep, decades-long partner" title should sit relative to the Sony/
+        // Nintendo/Ubisoft cluster. At 2.5x, Tekken 8 lands ~#18 (1232), solidly
+        // mid-pack among affiliated titles without unseating any of them. The
+        // 1.5x rate undersold the actual depth of the PS1-era partnership once
+        // compared directly against Ubisoft's 3.75x for a looser Apple-lineage
+        // claim (see SONY_AFFILIATED_PUBLISHERS) — Namco's hardware co-development
+        // history is arguably tighter than that thread, so 1.5x was leaving real
+        // value on the table. Stops short of the full Sony-affiliated rate since
+        // Namco was still never owned by Sony the way second-party studios were.
         const NAMCO_PUBLISHERS = ['namco', 'bandai namco'];
         // v5.6.4: Namco developer-side check. Wolf Team developed the earliest Tales
         // games (Tales of Phantasia, Tales of Destiny) and a range of Sega CD, SNES,
@@ -712,7 +723,43 @@
         // those early titles would get no Namco treatment at all despite being the
         // literal predecessor studio to Namco's RPG division.
         const NAMCO_DEVELOPERS = ['wolf team'];
-        const NAMCO_MULTIPLIER = 1.5;
+        const NAMCO_MULTIPLIER = 2.5;
+
+        // v7.9.7: Sega gets its own tier, on the same terms as Namco — a deep,
+        // decades-long partner that was never owned by Sony, but whose relationship
+        // with Sony specifically (not Nintendo) went well beyond typical third-party
+        // status: Sony Imagesoft's own publishing shifted from NES/Game Boy to
+        // Genesis/Master System/Game Gear before Sony and Sega co-developed Sega CD
+        // hardware, with Sony publishing more Sega CD titles than any other third
+        // party — effectively the R&D prototype for the PS1. Full-catalog-forever
+        // treatment per the same philosophy already applied to Capcom/Konami/Square/
+        // Enix under Pillar: an independent, platform-holder-scale company whose
+        // formative-era relationship colors its entire catalog, not just the titles
+        // from that era. Kept out of SONY_AFFILIATED_* because unlike every entry on
+        // those lists, Sega was never subordinate to Sony — it was a rival platform
+        // holder for most of the relevant decades, the same "peer, not contractor"
+        // distinction that keeps Pillar and Namco gentler than the core affiliated
+        // lists. Ironically this also pulls in Sega's Mario & Sonic Olympics
+        // collaborations with Nintendo — those get the Sega boost here regardless,
+        // same as Ubisoft gets both Sony-lineage and Nintendo-IP boosts where
+        // applicable.
+        // Atlus is included on the same full-catalog logic: Sega Sammy has owned
+        // Atlus outright since 2013, and Atlus's catalog (Persona, Metaphor, Shin
+        // Megami Tensei) is as much a part of modern Sega's identity as any
+        // internally-developed Sega franchise.
+        // Multiplier calibrated against 2024 and 2020 anchor cases: Yakuza: Like a
+        // Dragon was landing at #50 (860) in 2020 despite genuine cultural weight,
+        // and Persona 3 Reload / Metaphor: ReFantazio were landing at #47 (491) and
+        // #44 (555) respectively in 2024 with zero lineage credit. At 3.5x, Metaphor
+        // lands ~#9 (1943) and Persona 3 Reload ~#12 (1719) — rubbing elbows with
+        // the Sony/Nintendo/Ubisoft cluster without overshadowing Mario Kart World,
+        // Clair Obscur, or other top-tier entries. Set just under Ubisoft's 3.75x
+        // standalone rate: Sega's Sony partnership runs deep, but Sega's decades as
+        // a rival platform holder in its own right keep it a notch below a company
+        // that was never a hardware competitor.
+        const SEGA_PUBLISHERS = ['sega', 'atlus'];
+        const SEGA_DEVELOPERS = ['sega', 'atlus'];
+        const SEGA_MULTIPLIER = 3.5;
 
         // v5.4.4: Mainstream titles with massive console audiences that generate
         // genuine cultural penetration but whose players skew away from IGDB engagement.
@@ -778,6 +825,19 @@
             );
             const developerMatch = game.developers && game.developers.some(dev =>
                 NAMCO_DEVELOPERS.some(n => dev.toLowerCase().includes(n))
+            );
+            return publisherMatch || developerMatch;
+        }
+
+        // v7.9.7: Sega/Atlus check, same shape as isNamcoTitle — standalone tier,
+        // never folded into the Sony affiliated lists. See rationale on
+        // SEGA_PUBLISHERS above.
+        function isSegaTitle(game) {
+            const publisherMatch = game.publishers && game.publishers.some(pub =>
+                SEGA_PUBLISHERS.some(s => pub.toLowerCase().includes(s))
+            );
+            const developerMatch = game.developers && game.developers.some(dev =>
+                SEGA_DEVELOPERS.some(s => dev.toLowerCase().includes(s))
             );
             return publisherMatch || developerMatch;
         }
@@ -921,6 +981,13 @@
                     score = Math.round(score * NAMCO_MULTIPLIER);
                 }
 
+                // v7.9.7: Sega/Atlus-specific boost, stacked on the same terms as
+                // Namco — standalone tier, applied independently of the Sony/
+                // Nintendo affiliated lists. See rationale on SEGA_PUBLISHERS above.
+                if (isSegaTitle(game)) {
+                    score = Math.round(score * SEGA_MULTIPLIER);
+                }
+
                 // Award keyword boost
                 if (game.keywords && game.keywords.some(k => k.toLowerCase().includes('award'))) {
                     score = Math.round(score * AWARD_MULTIPLIER);
@@ -1003,9 +1070,9 @@
                     <div class="game-image-container">${game.cover ? `<img class="game-image" src="${coverUrl}" alt="${game.name} cover">` : ''}</div>
                     <div class="game-info">
                         <div class="game-title">${game.name}</div>
-                        <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase;">
+                        <!-- <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase;">
                             Hype Score: <span class="engagement-value">${game.hype_score}</span>
-                        </div>
+                        </div> -->
                         <div style="margin-top: 4px;">
                             ${game.platforms.filter(id => ALLOWED_PLATFORMS.includes(id)).map(id => `<span class="platform-tag">${PLATFORM_NAMES[id] || id}</span>`).join('')}
                         </div>
