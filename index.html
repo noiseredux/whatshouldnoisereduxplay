@@ -37,7 +37,7 @@
     <div class="container">
         <header>
             <h1>What Should Noiseredux Play?</h1>
-            <p class="version-tag">Version 8.1.0</p>
+            <p class="version-tag">Version 8.2.0</p>
         </header>
         <div class="controls">
             <label>Select Year:</label>
@@ -825,12 +825,37 @@
         // volume-based mitigation currently applied; revisit if it proves to be
         // a practical problem rather than a hypothetical one.
         //
-        // Still exclusion-only, per the v7.9.8 decision this rework does not
-        // revisit: only fires if nothing else above has already boosted the
-        // title, so it remains a "no franchise/publisher help needed, and
-        // critics loved it anyway" signal for genuinely unaffiliated titles
-        // (Clair Obscur, Balatro, Hades II, Animal Well), not a stacking bonus
-        // on top of affiliated/Pillar/Namco/Sega/etc. tiers.
+        // v8.2.0 EXPERIMENT: exclusion-only removed. Now stacks with every
+        // other multiplier, including the affiliated tiers. Reasoning: unlike
+        // the old volume-based version (where stacking was rejected in
+        // v7.9.8), aggregatedRating is critic-quality only — orthogonal to
+        // lineage/publisher/platform. There's no principled reason a
+        // Nintendo- or Sony-affiliated title should be walled off from credit
+        // for being critically excellent; the exclusion was inherited from the
+        // old design, not a deliberate stance on this dimension. Concrete case
+        // that surfaced this: Splatoon Raiders (2026, Nintendo EPD/Nintendo
+        // published, ~82 critic score) was getting zero Critical Darling
+        // credit purely because Nintendo affiliation already set
+        // hasOtherBoost — an accident of the old gate, not a considered
+        // decision that Nintendo/Sony titles shouldn't be able to earn it.
+        //
+        // Known and accepted risk: stacking compounds fast on top of the
+        // large affiliated multipliers (8.25x Nintendo, 3.75x Sony), since
+        // CRITICAL_DARLING_CEILING_MULT (3.5x) was calibrated assuming it
+        // only ever multiplies a modest, unboosted base. A merely-good
+        // Nintendo game (~78 critic) now lands around 8.25 * ~1.05 = ~8.7x
+        // effective; a critically excellent one (~95 critic) lands around
+        // 8.25 * ~3.02 = ~26.7x. In effect, critic score becomes a much
+        // steeper internal sorting axis within the affiliated tiers than it
+        // used to be, rather than affiliation being closer to a flat
+        // "this counts, full stop" credit. Explicitly being tried as-is
+        // (ceiling not pre-dampened for the stacked case) so it can be
+        // compared side-by-side against the v8.1.0 exclusion-only behavior
+        // on real Critical Darling test cases before deciding whether
+        // CRITICAL_DARLING_CEILING_MULT needs a separate (lower) value when
+        // stacking on top of an existing boost. If real data shows the
+        // affiliated tiers over-separating by quality more than desired,
+        // revisit here first.
         //
         // Calibration anchors pulled from real IGDB/Metacritic data (Aug 2026):
         //   Hades II          ~93-95 aggregated  -> ~2.3-2.6x
@@ -1104,16 +1129,13 @@
                     hasOtherBoost = true;
                 }
 
-                // v8.1.0: Critical Darling boost — scaled by critic score
-                // (aggregatedRating) rather than a flat rate. Still
-                // exclusion-only: only applies if nothing else above boosted
-                // this title. See extended rationale above
-                // getCriticalDarlingMultiplier().
-                if (!hasOtherBoost) {
-                    const criticalDarlingMultiplier = getCriticalDarlingMultiplier(game);
-                    if (criticalDarlingMultiplier > 1) {
-                        score = Math.round(score * criticalDarlingMultiplier);
-                    }
+                // v8.2.0 EXPERIMENT: Critical Darling boost — scaled by critic
+                // score (aggregatedRating), now stacking with every other
+                // multiplier (exclusion-only removed). See extended rationale
+                // above getCriticalDarlingMultiplier().
+                const criticalDarlingMultiplier = getCriticalDarlingMultiplier(game);
+                if (criticalDarlingMultiplier > 1) {
+                    score = Math.round(score * criticalDarlingMultiplier);
                 }
 
                 game.hype_score = score;
