@@ -1083,9 +1083,9 @@
                     <div class="game-image-container">${game.cover ? `<img class="game-image" src="${coverUrl}" alt="${game.name} cover">` : ''}</div>
                     <div class="game-info">
                         <div class="game-title">${game.name}</div>
-                        <!-- <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase;">
+                        <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase;">
                             Hype Score: <span class="engagement-value">${game.hype_score}</span>
-                        </div> -->
+                        </div>
                         <div style="margin-top: 4px;">
                             ${game.platforms.filter(id => ALLOWED_PLATFORMS.includes(id)).map(id => `<span class="platform-tag">${PLATFORM_NAMES[id] || id}</span>`).join('')}
                         </div>
