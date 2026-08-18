@@ -37,7 +37,7 @@
     <div class="container">
         <header>
             <h1>What Should Noiseredux Play?</h1>
-            <p class="version-tag">Version 8.0.0</p>
+            <p class="version-tag">Version 8.1.0</p>
         </header>
         <div class="controls">
             <label>Select Year:</label>
@@ -772,17 +772,82 @@
         ];
         const MAINSTREAM_MULTIPLIER = 2.0;
 
-        // v7.3.0: Critical Darling boost. Any game with 100+ combined user/critic
-        // reviews (IGDB total_rating_count) has demonstrated real organic engagement
-        // on its own merits, independent of publisher/platform/franchise affiliation.
-        // As of v7.3.0 this applies ACROSS THE BOARD and stacks with every other
-        // multiplier in the system — see the extended rationale on isCriticalDarling()
-        // below. Deliberately the gentlest multiplier in the system, since clearing
-        // 100 reviews is itself already a strong, organic signal and doesn't need
-        // much help — it's a bonus on top of the fanboy-lens baseline, not a
-        // substitute for it.
-        const CRITICAL_DARLING_MIN_REVIEWS = 100;
-        const CRITICAL_DARLING_MULTIPLIER = 1.25;
+        // v8.1.0: Critical Darling boost — REWORKED from a flat volume-gated
+        // multiplier to a scaled, critic-quality-driven multiplier.
+        //
+        // The old version (v7.3.0, reverted to exclusion-only in v7.9.8) fired
+        // whenever total_rating_count (combined user+critic review VOLUME) hit
+        // 100+, and applied a flat 1.25x regardless of whether those reviews
+        // were positive. That measures organic engagement, not quality — it
+        // rewarded games for being reviewed a lot, not for being good. This
+        // surfaced as a real problem with Hades II (2025): Metacritic's #1 game
+        // of the year (94-95, "Game of the Year" pick), buried near the bottom
+        // of its year's list because its raw engagement numbers (follows/hypes/
+        // review volume) are comparatively modest for a roguelike sequel with no
+        // major pre-release hype cycle. A flat multiplier on a small base stays
+        // small — cranking the flat rate up to compensate would have meant an
+        // arbitrarily large number chosen specifically to relocate one game,
+        // which is exactly the kind of unprincipled tuning this project tries to
+        // avoid outside the handful of explicitly-justified retro corrections
+        // (CDI/VB/WS/Digital Pictures) where the underrepresentation is
+        // structural, not a matter of taste.
+        //
+        // New approach: key the boost off IGDB's aggregated_rating field
+        // (external critic aggregate — Metacritic/OpenCritic-style, fetched
+        // separately from total_rating_count as of backend v5.4.0), scaled by
+        // a quadratic curve rather than a flat rate:
+        //
+        //   multiplier = 1 + ((score - 75) / 25)^2 * 2.5      [for score > 75]
+        //   multiplier = 1                                     [for score <= 75]
+        //   capped at score 100 (multiplier 3.5x)
+        //
+        // Deliberately quadratic, not linear: an 80 barely moves (~1.1x) while
+        // the gap between "great" (85, ~1.4x) and "extraordinary" (95, ~2.6x)
+        // compounds, so the boost stays proportionate to how rare that level of
+        // critical consensus actually is. CRITICAL_DARLING_FLOOR = 75 was chosen
+        // deliberately generous-but-meaningful: below that a game is "fine," not
+        // a critical darling in any real sense. CRITICAL_DARLING_CEILING_MULT =
+        // 3.5x was set to sit above Namco (2.5x) and Pillar (1.5x) — since a
+        // universally-acclaimed, completely unaffiliated title deserves more
+        // credit than a "deep partner" studio tag — while staying below the
+        // Sony (3.75x) and Nintendo (8.25x) affiliated rates, which represent
+        // structural corrections for platform-holder-scale lineage rather than
+        // a reward for quality.
+        //
+        // Deliberately NOT gated on aggregated_rating_count (critic review
+        // volume). A volume gate was considered and rejected: Hades II — the
+        // exact case this rework exists for — has only ~4 critic reviews behind
+        // its 93-95 IGDB aggregate. Any gate high enough to filter out a
+        // 3-review fluke score would also filter out Hades II itself. Accepted
+        // as a known tradeoff: a genuinely tiny-sample score (Shujinkou's 94 off
+        // 7 OpenCritic reviews was the real-world example that surfaced this
+        // risk during calibration) could theoretically also qualify. No
+        // volume-based mitigation currently applied; revisit if it proves to be
+        // a practical problem rather than a hypothetical one.
+        //
+        // Still exclusion-only, per the v7.9.8 decision this rework does not
+        // revisit: only fires if nothing else above has already boosted the
+        // title, so it remains a "no franchise/publisher help needed, and
+        // critics loved it anyway" signal for genuinely unaffiliated titles
+        // (Clair Obscur, Balatro, Hades II, Animal Well), not a stacking bonus
+        // on top of affiliated/Pillar/Namco/Sega/etc. tiers.
+        //
+        // Calibration anchors pulled from real IGDB/Metacritic data (Aug 2026):
+        //   Hades II          ~93-95 aggregated  -> ~2.3-2.6x
+        //   Clair Obscur      ~93    aggregated  -> ~2.3x
+        //   Balatro           ~91    aggregated  -> ~2.0x
+        //   Ghost of Yotei     87    aggregated  -> ~1.6x (Sony-affiliated;
+        //                                            never actually fires,
+        //                                            exclusion-only blocks it)
+        //   Elden Ring Nightreign 77-78 aggregated -> ~1.03x (also Sony-
+        //                                            affiliated; moot for the
+        //                                            same reason)
+        // Plan: survey a broader list of non-boosted Critical Darlings across
+        // multiple years against this curve and retune CRITICAL_DARLING_FLOOR /
+        // CRITICAL_DARLING_CEILING_MULT / the exponent if real placements don't
+        // match expectations.
+        const CRITICAL_DARLING_FLOOR = 75;
+        const CRITICAL_DARLING_CEILING_MULT = 3.5;
 
         // v7.8.0: PopScore (v7.5.0-v7.7.x) has been removed from scoring. It was
         // an additive base-score contributor sourced from IGDB's
@@ -910,29 +975,17 @@
             );
         }
 
-        // v7.9.8: REVERTED to exclusion-list behavior (pre-v7.3.0). Critical
-        // Darling now only applies when no other multiplier in the system has
-        // fired for this title — it no longer stacks with affiliated/Pillar/
-        // Namco/Sega/Nintendo-IP/CDi/VB/WS/Digital Pictures boosts. Rationale:
-        // with Namco and Sega recalibrated upward (v7.9.7) to sit closer to
-        // Ubisoft's standalone rate, letting Critical Darling stack on top of
-        // those already-large multipliers risked over-separating top-tier
-        // affiliated titles from each other on a dimension (organic reviews)
-        // that the affiliated boost isn't meant to measure in the first place.
-        // Reverting to exclusion-only keeps quality-based differentiation for
-        // completely unaffiliated titles (Clair Obscur, Balatro, Hades, Animal
-        // Well) — the "proved itself with the crowd, no franchise/publisher
-        // help needed" case this boost was originally built for — while
-        // affiliated titles are judged purely on their affiliation tier.
-        // Known trade-off, explicitly accepted: two titles from the same
-        // affiliated bucket (e.g. two Nintendo-affiliated games) with identical
-        // base engagement but very different reception will now score
-        // identically on this axis, since the affiliated boost already fired
-        // and blocks Critical Darling from adding anything further. If that
-        // proves to be a problem in practice, the v7.3.0 stacking version is
-        // preserved in version history.
-        function isCriticalDarling(game) {
-            return !!game.reviews && game.reviews >= CRITICAL_DARLING_MIN_REVIEWS;
+        // v8.1.0: Reworked from a boolean volume gate to a scaled, critic-score
+        // driven multiplier. Returns 1 (no boost) at or below
+        // CRITICAL_DARLING_FLOOR, and scales quadratically up to
+        // CRITICAL_DARLING_CEILING_MULT at a perfect 100. See extended
+        // rationale above CRITICAL_DARLING_FLOOR/CRITICAL_DARLING_CEILING_MULT.
+        function getCriticalDarlingMultiplier(game) {
+            const score = game.aggregatedRating || 0;
+            if (score <= CRITICAL_DARLING_FLOOR) return 1;
+            const clampedScore = Math.min(score, 100);
+            const normalized = (clampedScore - CRITICAL_DARLING_FLOOR) / (100 - CRITICAL_DARLING_FLOOR);
+            return 1 + (normalized * normalized) * CRITICAL_DARLING_CEILING_MULT;
         }
 
         function displayGames(gamesList) {
@@ -1051,11 +1104,16 @@
                     hasOtherBoost = true;
                 }
 
-                // v7.9.8: Critical Darling boost — REVERTED to exclusion-only. Only
-                // applies if nothing else above boosted this title. See extended
-                // rationale on isCriticalDarling() above.
-                if (!hasOtherBoost && isCriticalDarling(game)) {
-                    score = Math.round(score * CRITICAL_DARLING_MULTIPLIER);
+                // v8.1.0: Critical Darling boost — scaled by critic score
+                // (aggregatedRating) rather than a flat rate. Still
+                // exclusion-only: only applies if nothing else above boosted
+                // this title. See extended rationale above
+                // getCriticalDarlingMultiplier().
+                if (!hasOtherBoost) {
+                    const criticalDarlingMultiplier = getCriticalDarlingMultiplier(game);
+                    if (criticalDarlingMultiplier > 1) {
+                        score = Math.round(score * criticalDarlingMultiplier);
+                    }
                 }
 
                 game.hype_score = score;
