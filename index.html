@@ -70,25 +70,70 @@
             'dlc', 'expansion', 'bundle', 'standalone expansion', 'mod', 'episode', 'season'
         ];
 
-        // Full IGDB platform name -> short display tag, matching the look of
-        // the original site's abbreviated platform badges. Anything not in
-        // this map is displayed as-is.
-        const PLATFORM_ABBREVIATIONS = {
-            'PlayStation 5': 'PS5', 'PlayStation 4': 'PS4', 'PlayStation 3': 'PS3',
-            'PlayStation 2': 'PS2', 'PlayStation': 'PS1', 'PlayStation VR': 'PSVR',
-            'PlayStation VR2': 'PSVR2', 'PlayStation Portable': 'PSP', 'PlayStation Vita': 'PSV',
-            'Nintendo Switch 2': 'NS2', 'Nintendo Switch': 'NS', 'Wii U': 'WiiU', 'Wii': 'Wii',
-            'Nintendo GameCube': 'GC', 'Nintendo 64': 'N64',
-            'Nintendo Entertainment System': 'NES', 'Super Nintendo Entertainment System': 'SNES',
-            'Game Boy Advance': 'GBA', 'Game Boy Color': 'GBC', 'Game Boy': 'GB',
-            'Nintendo DS': 'DS', 'Nintendo 3DS': '3DS',
-            'PC (Microsoft Windows)': 'PC', 'Mac': 'Mac', 'iOS': 'iOS',
-            'Xbox Series X|S': 'XSX', 'Xbox One': 'XB1', 'Xbox 360': 'X360', 'Xbox': 'XBOX'
-        };
+        // Preferred-platform whitelist, matched against the CSV's platform
+        // *name* strings (the CSV has no numeric IGDB platform IDs to match
+        // on directly). Rules are checked in order, first match wins — more
+        // specific names (e.g. "Super Nintendo") are listed before generic
+        // ones (e.g. plain "Nintendo") so they don't get misclassified.
+        // Any platform not matched here is simply not shown.
+        const PLATFORM_RULES = [
+            { abbr: 'A2', keywords: ['apple ii'] },
+            { abbr: 'Mac', keywords: ['mac'] },
+            { abbr: 'iOS', keywords: ['ios'] },
+            { abbr: 'SNES', keywords: ['super nintendo', 'snes'] },
+            { abbr: 'NES', keywords: ['nintendo entertainment system', 'nes'] },
+            { abbr: 'SFC', keywords: ['super famicom', 'sfc'] },
+            { abbr: 'FC', keywords: ['famicom', 'family computer'] },
+            { abbr: 'N64', keywords: ['nintendo 64'] },
+            { abbr: 'GC', keywords: ['gamecube'] },
+            { abbr: 'WiiU', keywords: ['wii u'] },
+            { abbr: 'Wii', keywords: ['wii'] },
+            { abbr: 'NS2', keywords: ['switch 2'] },
+            { abbr: 'NS', keywords: ['nintendo switch'] },
+            { abbr: 'GBC', keywords: ['game boy color'] },
+            { abbr: 'GBA', keywords: ['game boy advance'] },
+            { abbr: 'GB', keywords: ['game boy'] },
+            { abbr: '3DS', keywords: ['3ds'] },
+            { abbr: 'DS', keywords: ['nintendo ds'] },
+            { abbr: 'MSX2', keywords: ['msx2'] },
+            { abbr: 'MSX', keywords: ['msx'] },
+            { abbr: '2600', keywords: ['2600'] },
+            { abbr: 'CV', keywords: ['colecovision'] },
+            { abbr: 'CDi', keywords: ['cd-i', 'cdi'] },
+            { abbr: 'SCD', keywords: ['sega cd', 'mega-cd', 'mega cd'] },
+            { abbr: 'WSC', keywords: ['wonderswan color'] },
+            { abbr: 'WS', keywords: ['wonderswan'] },
+            { abbr: 'VB', keywords: ['virtual boy'] },
+            { abbr: 'PS5', keywords: ['playstation 5'] },
+            { abbr: 'PS4', keywords: ['playstation 4'] },
+            { abbr: 'PS3', keywords: ['playstation 3'] },
+            { abbr: 'PS2', keywords: ['playstation 2'] },
+            { abbr: 'PSVR', keywords: ['playstation vr'] },
+            { abbr: 'PSP', keywords: ['playstation portable'] },
+            { abbr: 'PSV', keywords: ['playstation vita'] },
+            { abbr: 'PS1', keywords: ['playstation'] },
+            { abbr: 'FDS', keywords: ['disk system'] },
+            { abbr: 'X68k', keywords: ['x68000'] },
+            { abbr: 'X1', keywords: ['sharp x1'] },
+            { abbr: 'SV', keywords: ['supervision'] },
+            { abbr: 'TGCD', keywords: ['turbografx-cd', 'turbografx cd', 'pc engine cd'] },
+            { abbr: 'TG16', keywords: ['turbografx', 'pc engine'] },
+            { abbr: 'SG', keywords: ['sg-1000', 'sg1000'] },
+            { abbr: '32X', keywords: ['32x'] },
+            { abbr: 'SMS', keywords: ['master system'] },
+            { abbr: 'GG', keywords: ['game gear'] }
+        ];
 
         // --- HELPERS ------------------------------------------------------
-        function abbreviatePlatform(name) {
-            return PLATFORM_ABBREVIATIONS[name] || name;
+        // Returns the preferred abbreviation for a platform name, or null if
+        // it's not on the whitelist (in which case it won't be shown at all).
+        function getPlatformAbbr(name) {
+            if (!name) return null;
+            const lower = name.toLowerCase();
+            for (const rule of PLATFORM_RULES) {
+                if (rule.keywords.some(k => lower.includes(k))) return rule.abbr;
+            }
+            return null;
         }
 
         function escapeHtml(str) {
@@ -281,7 +326,7 @@
                                 : '<span style="color:#aaa;">Unrated</span>'}
                         </div>
                         <div style="margin-top: 4px;">
-                            ${game.platforms.map(p => `<span class="platform-tag">${escapeHtml(abbreviatePlatform(p))}</span>`).join('')}
+                            ${game.platforms.map(p => getPlatformAbbr(p)).filter(Boolean).map(abbr => `<span class="platform-tag">${escapeHtml(abbr)}</span>`).join('')}
                         </div>
                     </div>`;
                 grid.appendChild(card);
