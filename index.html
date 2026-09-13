@@ -38,7 +38,7 @@
     <div class="container">
         <header>
             <h1>What Should Noiseredux Play?</h1>
-            <p class="version-tag">Version 11.0.0</p>
+            <p class="version-tag">Version 11.1.0</p>
         </header>
         <div class="controls">
             <label>Select Year:</label>
@@ -192,8 +192,10 @@
                 }
                 const reviewCount = game.reviews || 0;
                 breakdownParts.push(`${reviewCount.toLocaleString()} review${reviewCount === 1 ? '' : 's'}`);
-                breakdownParts.push(`Review Score ${Math.round(game.review_score)}`);
-                breakdownParts.push(`Hype ${Math.round(game.hype_score)}`);
+                if (game.releaseDate) {
+                    const releaseDateStr = new Date(game.releaseDate * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
+                    breakdownParts.push(releaseDateStr);
+                }
 
                 card.innerHTML = `
                     <div class="game-rank">#${index + 1}</div>
