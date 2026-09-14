@@ -37,7 +37,7 @@
     <div class="container">
         <header>
             <h1>What Should Noiseredux Play?</h1>
-            <p class="version-tag">Version 9.1.0 (TEST — 50/50 blend)</p>
+            <p class="version-tag">Version 9.0.0</p>
         </header>
         <div class="controls">
             <label>Select Year:</label>
@@ -836,11 +836,8 @@
         // project owner: if the percentile-blend results don't look right
         // against real data, revert to v8.2.0 (or v8.1.0) and go back to
         // tuning the multiplier-based Critical Darling boost instead.
-        // v9.1.0 TEST: trying 50/50 in place of the untested 0.6/0.4 starting
-        // guess from v8.3.0, per project owner request — see if critic score
-        // deserves equal footing with hype rather than being subordinate to it.
-        const HYPE_WEIGHT = 0.5;
-        const QUALITY_WEIGHT = 0.5;
+        const HYPE_WEIGHT = 0.6;
+        const QUALITY_WEIGHT = 0.4;
 
 
         // v7.8.0: PopScore (v7.5.0-v7.7.x) has been removed from scoring. It was
