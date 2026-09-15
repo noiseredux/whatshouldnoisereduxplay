@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>What Should Noiseredux Play?</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         :root {
             --ps-blue: #003087;
@@ -15,21 +16,22 @@
         }
         body { background-color: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; margin: 0; }
         .container { max-width: 1200px; margin: 0 auto; background: white; min-height: 100vh; box-shadow: 0 0 40px rgba(0,0,0,0.05); }
-        header { background: linear-gradient(135deg, var(--ps-blue) 0%, #001a4d 100%); border-bottom: 4px solid var(--nin-red); padding: 3rem 1.5rem; text-align: center; }
-        header h1 { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.2rem, 7vw, 4.2rem); color: #fff; line-height: 0.9; text-transform: uppercase; margin: 0; }
+        header { background: linear-gradient(135deg, var(--ps-blue) 0%, #001a4d 100%); border-bottom: 4px solid var(--nin-red); padding: 1rem 1.5rem; text-align: center; }
+        header h1 { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.6rem, 4.5vw, 2.4rem); color: #fff; line-height: 0.9; text-transform: uppercase; margin: 0; }
         .version-tag { font-size: 0.8rem; letter-spacing: 0.3em; text-transform: uppercase; color: #ffffff; opacity: 0.8; margin-top: 0.75rem; font-weight: 500; }
-        .controls { background: #e2e2ea; padding: 15px; display: flex; justify-content: center; align-items: center; gap: 15px; }
-        .controls select { padding: 8px 20px; font-weight: 700; border: 2px solid var(--ps-blue); border-radius: 4px; color: var(--ps-blue); cursor: pointer; }
+        .controls { background: #e2e2ea; padding: 8px 15px; display: flex; justify-content: center; align-items: center; gap: 15px; }
+        .controls select { padding: 5px 16px; font-weight: 700; border: 2px solid var(--ps-blue); border-radius: 4px; color: var(--ps-blue); cursor: pointer; }
         .loading { text-align: center; padding: 80px; font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: var(--ps-blue); }
-        .games-grid { display: flex; flex-direction: column; gap: 12px; padding: 30px; max-width: 900px; margin: 0 auto; }
-        .game-card { background: white; border: 1px solid #dcdce8; border-radius: 8px; display: flex; align-items: center; padding: 14px; gap: 20px; text-decoration: none; color: inherit; transition: all 0.2s ease; }
+        .games-grid { display: flex; flex-direction: column; gap: 10px; padding: 15px 30px 30px; max-width: 900px; margin: 0 auto; }
+        .game-card { background: white; border: 1px solid #dcdce8; border-radius: 8px; display: flex; align-items: center; padding: 10px 14px; gap: 16px; text-decoration: none; color: inherit; transition: all 0.2s ease; }
+        .game-card.below-top5 { background: #ececf2; }
         .game-card:hover { transform: translateX(8px); border-color: var(--ps-blue-light); }
-        .game-rank { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; color: var(--ps-blue); min-width: 65px; text-align: center; }
-        .game-image-container { width: 70px; height: 94px; background: #eee; border-radius: 4px; overflow: hidden; flex-shrink: 0; }
+        .game-rank { font-family: 'Bebas Neue', sans-serif; font-size: 1.9rem; color: var(--ps-blue); min-width: 55px; text-align: center; }
+        .game-image-container { width: 56px; height: 75px; background: #eee; border-radius: 4px; overflow: hidden; flex-shrink: 0; }
         .game-image { width: 100%; height: 100%; object-fit: cover; }
-        .game-title { font-weight: 700; font-size: 1.2rem; color: var(--text); }
+        .game-title { font-weight: 700; font-size: 1.08rem; color: var(--text); line-height: 1.2; }
         .engagement-value { color: var(--nin-red); font-weight: 700; }
-        .platform-tag { background: #edf2f7; color: #4a5568; font-size: 0.65rem; padding: 3px 8px; border-radius: 4px; margin-right: 5px; text-transform: uppercase; font-weight: 700; border: 1px solid #cbd5e0; }
+        .platform-tag { background: #edf2f7; color: #4a5568; font-size: 0.63rem; padding: 2px 7px; border-radius: 4px; margin-right: 4px; text-transform: uppercase; font-weight: 700; border: 1px solid #cbd5e0; }
         footer { padding: 50px; text-align: center; color: var(--text-muted); font-size: 0.8rem; border-top: 1px solid #e2e2ea; }
     </style>
 </head>
@@ -37,7 +39,6 @@
     <div class="container">
         <header>
             <h1>What Should Noiseredux Play?</h1>
-            <p class="version-tag">Version 9.0.0</p>
         </header>
         <div class="controls">
             <label>Select Year:</label>
@@ -45,1060 +46,274 @@
         </div>
         <div id="content"></div>
         <footer>
-            Built by noiseredux &nbsp;·&nbsp; Data powered by IGDB <br>
-            A personal index for Sony, Nintendo, and Apple collectors — through the lens of a lifelong fanboy.
+            Built by noiseredux &nbsp;·&nbsp; Data sourced from an IGDB List, exported to CSV <br>
+            A personal want-to-play index for Sony, Nintendo, and Apple collectors — through the lens of a lifelong fanboy.
         </footer>
     </div>
 
     <script>
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby3_IE8KU_qeQ4JCgTnoaF1w--vPUemtxHjW5Aq3aF_cUN8eqmYny7xlAlbT-wMp4Qj/exec';
+        // --- CONFIG -----------------------------------------------------
+        // Must be the raw.githubusercontent.com URL, not a github.com/.../blob/
+        // page — the blob page serves HTML with no CORS headers, so fetch()
+        // will fail with an "Access-Control-Allow-Origin" error like the one
+        // above.
+        const CSV_URL = 'https://raw.githubusercontent.com/noiseredux/whatshouldnoisereduxplay/main/want-to-play.csv';
 
-        const ALLOWED_PLATFORMS = [75, 14, 39, 18, 99, 19, 58, 4, 21, 5, 41, 130, 508, 33, 22, 24, 20, 37, 27, 53, 59, 68, 117, 78, 57, 123, 87, 7, 8, 9, 48, 167, 165, 38, 46, 51, 77, 121, 306, 86, 150, 29, 30, 64, 35];
-        const PLATFORM_NAMES = { 75: 'A2', 14: 'Mac', 39: 'iOS', 18: 'NES', 99: 'FC', 19: 'SNES', 58: 'SFC', 4: 'N64', 21: 'GC', 5: 'Wii', 41: 'WiiU', 130: 'NS', 508: 'NS2', 33: 'GB', 22: 'GBC', 24: 'GBA', 20: 'DS', 37: '3DS', 27: 'MSX', 53: 'MSX2', 59: '2600', 68: 'CV', 117: 'CDi', 78: 'SCD', 57: 'WS', 123: 'WSC', 87: 'VB', 7: 'PS1', 8: 'PS2', 9: 'PS3', 48: 'PS4', 167: 'PS5', 165: 'PSVR', 38: 'PSP', 46: 'PSV', 51: 'FDS', 77: 'X1', 121: 'X68k', 306: 'SV', 86: 'TG16', 150: 'TGCD', 29: 'SG', 30: '32X', 64: 'SMS', 35: 'GG' };
+        const COVER_ART_URL = 'https://script.google.com/macros/s/AKfycbyUhqm3gLlqzSrK-tfxB-uHfTbUBfUwYiHxLmMJqeBPiADBHta1Eg2QUi-1UPtpZkrD/exec';
 
-        // --- Scoring constants ---
-        const GENRE_SPORT_ID = 14;
-        const SPORT_MULTIPLIER = 2.5;
-        // v7.4.2: Nintendo multiplier recalibrated again to 2.2x Sony's rate
-        // (3.75 * 2.2 = 8.25). Rationale: two independent test cases converged on
-        // roughly this same ratio — Animal Crossing: New Horizons needing ~2.22x
-        // to clear Ghost of Tsushima (2020), and Super Mario Odyssey needing ~2.18x
-        // to clear NieR: Automata (2017) — landing within a hair of each other
-        // despite being completely different years and matchups. Note: the NieR
-        // comparison is influenced by NieR also receiving the separate Pillar boost
-        // (Square Enix as publisher) stacked on top of its Sony-affiliated
-        // multiplier (PlatinumGames as developer); that stacking is accepted
-        // project philosophy as of this version, so the 2.2x figure is calibrated
-        // against the real, current scoring behavior rather than a hypothetical
-        // unstacked baseline. Supersedes the 1.75x ratio from v7.4.1.
-        const NINTENDO_AFFILIATED_MULTIPLIER = 8.25;
-        const SONY_AFFILIATED_MULTIPLIER = 3.75;
+        const COVER_CACHE_KEY = 'noiseredux_cover_cache_v1';
+        const COVER_BATCH_SIZE = 100; // keep query-string length safely small per request
 
-        // v7.0.1: Pillar third-party boost — Square, Enix, Capcom, Konami.
-        // These four studios collectively defined the NES era, co-defined the SNES era,
-        // and then jumped ship to PS1 where they helped define that era too. Their bond
-        // with Nintendo was so deep that Nintendo published Dragon Quest, Final Fantasy,
-        // and hired Square to make Super Mario RPG. Enix and Square were rivals but
-        // shared identical relationships with Nintendo and then Sony — treated separately
-        // here since they were independent companies for most of their important history.
-        // The full-catalog treatment applies: the relationship retroactively colors
-        // everything these studios made, the same philosophy applied to Rare, FromSoftware,
-        // PlatinumGames etc. Gentle multiplier since these are mainstream studios with
-        // strong organic IGDB engagement — this is a philosophical statement rather than
-        // a structural data correction.
-        const PILLAR_PUBLISHERS = ['square', 'enix', 'capcom', 'konami'];
-        const PILLAR_MULTIPLIER = 1.5;
-
-        // v7.0.4: Nintendo franchise IP boost for sanctioned non-Nintendo-published titles.
-        // Nintendo has occasionally licensed their most protected IP to outside developers —
-        // Mario + Rabbids (Ubisoft), Starlink: Battle for Atlas (Ubisoft, effectively a new
-        // Star Fox game), Cadence of Hyrule (Brace Yourself Games). These are the modern
-        // equivalent of the CDi Zelda games in terms of Nintendo lending their franchises
-        // to outside parties. IGDB data catastrophically underrepresents these titles because
-        // they don't carry Nintendo as publisher and thus get no affiliated boost, yet they
-        // are genuinely significant Nintendo franchise moments.
-        // Condition: only applies when the game is NOT already receiving the affiliated
-        // publisher boost, preventing double-boosting of first-party Nintendo titles whose
-        // slugs also contain these keywords (e.g. Mario Kart World already gets 3.75x
-        // affiliated — it doesn't need this on top).
-        // 'mario' catches Mario + Rabbids series without referencing Ubisoft's Rabbids IP.
-        // 'starlink' catches Starlink: Battle for Atlas specifically.
-        const NINTENDO_IP_SLUGS = [
-            'mario',
-            'zelda',
-            'hyrule',
-            'metroid',
-            'kirby',
-            'donkey-kong',
-            'star-fox',
-            'starlink'
-        ];
-        const NINTENDO_IP_MULTIPLIER = 5.0;
-
-        // v5.6.8: Failure/underrepresentation corrections.
-        // These boost titles whose real-world cultural footprint vastly exceeds their
-        // IGDB engagement, either due to platform sparsity, regional bias, or the
-        // fact that controversy and notoriety generate hype even without positive reception.
-
-        // CDi Nintendo titles: Zelda and Mario games on CDi were massive gaming news
-        // in 1993-1994 despite poor quality. CD-ROM Zelda was mind-blowing concept.
-        // Raw IGDB data is near-zero; 15x needed to reach rational placement.
-        const CDI_PLATFORM_ID = 117;
-        const CDI_NINTENDO_SLUGS = ['zelda', 'mario', 'link'];
-        const CDI_MULTIPLIER = 60.0;
-
-        // Virtual Boy: Huge marketing spend, Nintendo Power coverage, Blockbuster
-        // promotions. A loud expensive failure that every 1995 Nintendo kid knew about.
-        // Platform boost applies to entire VB library (platform 87).
-        const VB_PLATFORM_ID = 87;
-        const VB_MULTIPLIER = 4.0;
-
-        // WonderSwan/WSC: Japanese-market success with Nintendo DNA (Gunpei Yokoi),
-        // Sony link cable, Namco/Bandai hardware. IGDB Western bias makes data
-        // near-zero for most titles. Aggressive correction needed.
-        const WS_PLATFORM_IDS = [57, 123];
-        const WS_MULTIPLIER = 20.0;
-
-        // v5.6.9: Controversy and development-hell keyword boosts removed.
-        // The controversy tag proved too broad — catching games like Hatred (2015)
-        // alongside Night Trap, and pushing Star Wars Battlefront II above BotW in 2017.
-        // Night Trap's real-world hype is now addressed through the Digital Pictures
-        // developer boost below, which is historically accurate and surgically scoped.
-
-        // Digital Pictures developer boost. Digital Pictures was effectively Sony-founded:
-        // Sony USA chairman Mickey Schulhof struck the original deal with Tom Zito that
-        // led to the company's incorporation, intending their FMV games (Night Trap,
-        // Sewer Shark) for the failed Nintendo/Sony CD-ROM prototype. When that deal
-        // collapsed, Sony Imagesoft went on to publish Sewer Shark on Sega CD.
-        // These games have near-zero IGDB engagement despite enormous 1992-1994
-        // cultural footprint as the center of congressional hearings and the reason
-        // the ESRB exists. Same multiplier as the planned controversy boost.
-        const DIGITAL_PICTURES_DEVELOPERS = ['digital pictures'];
-        const DIGITAL_PICTURES_MULTIPLIER = 22.0;
-
-        // v5.3.0: Major league sports titles receive an additional boost on top of
-        // the standard SPORT_MULTIPLIER. These franchises have massive console-first
-        // audiences that don't engage with IGDB, causing severe underrepresentation.
-        // FC/FIFA and NBA 2K are intentionally excluded — their IGDB engagement
-        // already reflects real-world mindshare reasonably well.
-        // Target: Madden lands just below FC; MLB/NHL/NASCAR land below Madden.
-        const MAJOR_LEAGUE_TITLE_SLUGS = [
-            'madden',
-            'mlb-the-show',
-            'nhl-',
-            'nascar',
-            'ea-sports-college-football',
-            'pga-tour-2k'
-        ];
-        const MAJOR_LEAGUE_MULTIPLIER = 6.5;
-
-        // v5.4.0: Expanded affiliated publisher list covering the full Nintendo and
-        // Sony lineages, including second-party and historically close studios.
-        // These publishers are treated identically to first-party for scoring purposes
-        // because their histories are inseparable from the Nintendo/Sony story.
-        //
-        // Nintendo lineage: HAL, Game Freak, Hudson (first NES third party, co-developed
-        // HuCARD), Rare (pre-Xbox), Intelligent Systems, Monolith Soft, Retro, etc.
-        //
-        // Sony lineage: Psygnosis (published ~half of Sony's Sega CD catalog and was
-        // acquired during that era), Polyphony, Naughty Dog, Insomniac, Guerrilla,
-        // CSG/Sony Imagesoft (the early US publishing arm), and all current
-        // PlayStation Studios subsidiaries.
-        // v7.4.0: Split into NINTENDO_AFFILIATED_PUBLISHERS and
-        // SONY_AFFILIATED_PUBLISHERS along the lineage boundaries the section
-        // comments below already establish. NOTE ON APPLE: the site treats Apple
-        // as a third fandom pillar in its branding/footer, but there has never
-        // been a dedicated Apple multiplier in this codebase — the 'apple' entry
-        // and the Apple II/Mac-era publisher block were always folded into the
-        // shared affiliated list. They stay bundled into the SONY bucket here
-        // (not a new third bucket) purely to preserve existing behavior for
-        // those titles; this was not something the Nintendo/Sony split was asked
-        // to address. Revisit as its own decision if desired.
-        //
-        // v7.9.2 recognizes Acclaim/LJN's uniquely close, highly strategic relationship
-        // with Nintendo during the NES and SNES eras that genuinely elevated its status
-        // above almost every other third-party competitor. (Acclaim was Nintendo's first
-        // American third-party licensee; Until the early 90s, virtually all of Acclaim's 
-        // revenue was derived from Nintendo platforms).
-        const NINTENDO_AFFILIATED_PUBLISHERS = [
-            // Nintendo lineage
-            'nintendo',
-            'the pokemon company',
-            'bullet-proof software',
-            'hal laboratory',
-            'hal america',
-            'game freak',
-            'monolith soft',
-            'retro studios',
-            'intelligent systems',
-            'creatures inc',
-            'nd cube',
-            'grezzo',
-            'camelot',
-            'alphadream',
-            'brownie brown',
-            '1-up studio',
-            'jupiter corporation',
-            'ambrella',
-            'skip ltd',
-            'rare',
-            'rareware',
-            'hudson soft',
-            'hudson entertainment',
-            'ape inc',
-            'tose',
-            'arzest',
-            'syn sophia',
-            'arika',
-            'ganbarion',
-            'genius sonority',
-            'paon',
-            'treasure',
-            'mistwalker',
-            'next level games',
-            'vanpool',
-            'good-feel',
-            'mercurysteam',
-            'koei tecmo',
-            'omega force',
-            'team ninja',
-            'platinumgames',
-            'acclaim',
-            'ljn',
-            'iguana entertainment',
-            'sculptured software',
-            'arena entertainment',
-            'valiant comics',
-            'mirrorsoft',
-
-            // TurboGrafx-16/Hudson lineage — modern era.
-            // Nicalis was founded by Tyrone Rodriguez, a former Nintendo publicist,
-            // and built entirely around bringing retro-spirited Japanese games to
-            // Nintendo platforms (WiiWare, DSiWare, 3DS, Switch). Their catalog is
-            // a love letter to the NES/SNES era. Crystal Crisis features Johnny Turbo
-            // — the TurboDuo mascot born from the NEC/Hudson joint venture — directly
-            // connecting Nicalis to the TG16 lineage. Flying Tiger Entertainment is
-            // John Brandstetter's company; Brandstetter is the real person Johnny
-            // Turbo was based on, making Flying Tiger a literal continuation of the
-            // NEC/Hudson North American marketing identity. Both companies carry the
-            // TG16 underdog spirit into the modern Nintendo ecosystem in ways that
-            // mainstream gaming coverage would never bother to document.
-            'nicalis',
-            'flying tiger',
-
-            // v7.4.3: Argonaut Software (later Argonaut Games). Effectively a
-            // de facto Nintendo second-party studio during the SNES era —
-            // Argonaut co-designed the Super FX chip specifically for Nintendo
-            // hardware, and its staff worked in-house at Nintendo's Kyoto EAD
-            // office writing most of the code for Star Fox (1993), a Nintendo-
-            // published, Nintendo EAD/Argonaut co-developed title, followed by
-            // the unreleased-until-2017 Star Fox 2. Same tier of relationship as
-            // Rare, arguably deeper given the custom hardware collaboration.
-            'argonaut',
-
-            // v7.9.0: The Software Toolworks / Mindscape edutainment-Mario cluster.
-            // Nintendo licensed the Mario characters (though not the studio's
-            // involvement in development) to The Software Toolworks for Mario Is
-            // Missing! (1993, later ported to Mac in 1994), Mario's Time Machine
-            // (1993), and the Mario's Early Years! trilogy. Software Toolworks
-            // acquired Mindscape in 1990 largely FOR its Nintendo licensing rights,
-            // and was itself rebranded Mindscape in 1994 — both names covered here.
-            // Per full-catalog philosophy, the same licensing relationship extends
-            // to the other studios Nintendo licensed Mario out to for this same
-            // edutainment wave: Interplay (Mario Teaches Typing 1 & 2, the latter
-            // via Interplay's internal Brainstorm division — not added separately,
-            // since it wasn't a distinct legal company and 'interplay' already
-            // covers its games), Radical Entertainment (NES ports of Mario Is
-            // Missing! and Mario's Time Machine), and Knowledge Adventure
-            // (MS-DOS/Windows Mario's Time Machine).
-            'software toolworks',
-            'mindscape',
-            'interplay',
-            'radical entertainment',
-            'knowledge adventure'
+        // Preferred-platform whitelist, matched against the CSV's platform
+        // *name* strings (the CSV has no numeric IGDB platform IDs to match
+        // on directly). Rules are checked in order, first match wins — more
+        // specific names (e.g. "Super Nintendo") are listed before generic
+        // ones (e.g. plain "Nintendo") so they don't get misclassified.
+        // Any platform not matched here is simply not shown.
+        const PLATFORM_RULES = [
+            { abbr: 'A2', keywords: ['apple ii'] },
+            { abbr: 'Mac', keywords: ['mac'] },
+            { abbr: 'iOS', keywords: ['ios'] },
+            { abbr: 'SNES', keywords: ['super nintendo', 'snes'] },
+            { abbr: 'NES', keywords: ['nintendo entertainment system', 'nes'] },
+            { abbr: 'SFC', keywords: ['super famicom', 'sfc'] },
+            { abbr: 'FC', keywords: ['famicom', 'family computer'] },
+            { abbr: 'N64', keywords: ['nintendo 64'] },
+            { abbr: 'GC', keywords: ['gamecube'] },
+            { abbr: 'WiiU', keywords: ['wii u'] },
+            { abbr: 'Wii', keywords: ['wii'] },
+            { abbr: 'NS2', keywords: ['switch 2'] },
+            { abbr: 'NS', keywords: ['nintendo switch'] },
+            { abbr: 'GBC', keywords: ['game boy color'] },
+            { abbr: 'GBA', keywords: ['game boy advance'] },
+            { abbr: 'GB', keywords: ['game boy'] },
+            { abbr: '3DS', keywords: ['3ds'] },
+            { abbr: 'DS', keywords: ['nintendo ds'] },
+            { abbr: 'MSX2', keywords: ['msx2'] },
+            { abbr: 'MSX', keywords: ['msx'] },
+            { abbr: '2600', keywords: ['2600'] },
+            { abbr: 'CV', keywords: ['colecovision'] },
+            { abbr: 'CDi', keywords: ['cd-i', 'cdi'] },
+            { abbr: 'SCD', keywords: ['sega cd', 'mega-cd', 'mega cd'] },
+            { abbr: 'WSC', keywords: ['wonderswan color'] },
+            { abbr: 'WS', keywords: ['wonderswan'] },
+            { abbr: 'VB', keywords: ['virtual boy'] },
+            { abbr: 'PS5', keywords: ['playstation 5'] },
+            { abbr: 'PS4', keywords: ['playstation 4'] },
+            { abbr: 'PS3', keywords: ['playstation 3'] },
+            { abbr: 'PS2', keywords: ['playstation 2'] },
+            { abbr: 'PSVR', keywords: ['playstation vr'] },
+            { abbr: 'PSP', keywords: ['playstation portable'] },
+            { abbr: 'PSV', keywords: ['playstation vita'] },
+            { abbr: 'PS1', keywords: ['playstation'] },
+            { abbr: 'FDS', keywords: ['disk system'] },
+            { abbr: 'X68k', keywords: ['x68000'] },
+            { abbr: 'X1', keywords: ['sharp x1'] },
+            { abbr: 'SV', keywords: ['supervision'] },
+            { abbr: 'TGCD', keywords: ['turbografx-cd', 'turbografx cd', 'pc engine cd'] },
+            { abbr: 'TG16', keywords: ['turbografx', 'pc engine'] },
+            { abbr: 'SG', keywords: ['sg-1000', 'sg1000'] },
+            { abbr: '32X', keywords: ['32x'] },
+            { abbr: 'SMS', keywords: ['master system'] },
+            { abbr: 'GG', keywords: ['game gear'] }
         ];
 
-        const SONY_AFFILIATED_PUBLISHERS = [
-            // Sony lineage
-            'sony',
-            'csg imagesoft',
-            'sony imagesoft',
-            'apple',
-            'rac7',
-            'cbs electronics',
-            'cbs software',
-            'psygnosis',
-            'studio liverpool',
-            'guerrilla games',
-            'naughty dog',
-            'insomniac games',
-            'sucker punch',
-            'media molecule',
-            'evolution studios',
-            'polyphony digital',
-            'japan studio',
-            'team asobi',
-            'bend studio',
-            'san diego studio',
-            'zipper interactive',
-            'bigbig studios',
-            'ready at dawn',
-            'firesprite',
-            'housemarque',
-            'bluepoint games',
-            'nixxes software',
-            'bungie',
-            'arrowhead',
-            'kojima productions',
-            'shift up',
-            'fromsoftware',
-            'sumo digital',
-            'ember lab',
-            'media.vision',
-            'supermassive games',
-            'quantic dream',
-            'clap hanz',
-            'thatgamecompany',
-            'novarama',
-            'relentless software',
-            'game republic',
-            'eurocom',
-            'ballistic moon',
-            'superbot entertainment',
+        // --- HELPERS ------------------------------------------------------
+        // Returns the preferred abbreviation for a platform name, or null if
+        // it's not on the whitelist (in which case it won't be shown at all).
+        function getPlatformAbbr(name) {
+            if (!name) return null;
+            const lower = name.toLowerCase();
+            for (const rule of PLATFORM_RULES) {
+                if (rule.keywords.some(k => lower.includes(k))) return rule.abbr;
+            }
+            return null;
+        }
 
-            // Sony Imagesoft Sega CD second-party studios (early 1990s).
-            // These developers formed the proto-PlayStation publishing infrastructure
-            // that Sony quietly assembled during the Sega CD era. Their collective
-            // work on that platform directly laid the foundation for the PS1's early
-            // identity and library. The relationship retroactively colors their full
-            // catalogs under the same philosophy applied to Rare, FromSoftware, etc.
-            // Core Design notably went on to create Tomb Raider (1996), one of the
-            // defining early PS1 titles — the Sony Sega CD connection is a direct
-            // thread to that outcome.
-            'malibu interactive',
-            'core design',
-            'ringler studios',
-            'absolute entertainment',
-            'imagineering',
-            "traveller's tales",
-            'kogado',
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str == null ? '' : str;
+            return div.innerHTML;
+        }
 
-            // CSG/Sony Imagesoft NES/GB/SNES era developers (1989-1994).
-            // These studios form the earliest layer of the Sony publishing story —
-            // before Sega CD, before PlayStation, when CSG Imagesoft was still a
-            // Nintendo-only publisher learning the business of games. Their work
-            // is the embryo of the PS1. Notable: Game Freak developed Smart Ball
-            // for Sony Imagesoft (1992) before Pokémon; Hudson Soft's European
-            // Super Bomberman was a Sony Imagesoft release. The web of Nintendo
-            // and Sony DNA in this era is extraordinary.
-            'software creations',
-            'probe software',
-            'probe entertainment',
-            'acclaim studios london',
-            'acclaim cheltenham',
-            'sensible software',
-            'spidersoft',
-            'motivetime',
-            'outside directors',
-            'park place productions',
-            'sting entertainment',
-            'tiertex',
-            'teque',
-            'ocean software',
-            'ukiyotei',
-            'propaganda code',
-            'bits studios',
-            'bits studio',
-            'teeny weeny games',
-            'perfect 10 productions',
-            'perfect entertainment',
-            'factor 5',
-            'kitty group',
-            'technos japan',
-
-            // Apple II / early Mac era defining publishers.
-            // These studios defined what Apple computer gaming meant culturally in
-            // the same way Capcom and Konami defined the NES era. MECC had a formal
-            // distribution agreement with Apple Computer. Broderbund published Lode
-            // Runner, Carmen Sandiego, and Prince of Persia — the latter created on
-            // an Apple II and now stewarded by Ubisoft, who acquired Broderbund's
-            // catalog via The Learning Company. Ubisoft's inclusion here creates a
-            // thread from Apple II (1977) through to the modern era via Prince of
-            // Persia, and is further reinforced by their Nintendo relationship through
-            // Mario + Rabbids and Starlink. Sierra On-Line, Infocom, Epyx, Sublogic,
-            // and Muse Software were the other pillars of the Apple II/Mac gaming
-            // identity — the full catalog treatment applies as always.
-            'mecc',
-            'broderbund',
-            'sierra',
-            'infocom',
-            'epyx',
-            'sublogic',
-            'muse software',
-            'ubisoft',
-
-            // v7.7.0: Games confirmed bundled directly with Apple II/Mac hardware —
-            // pack-ins, not just software that happened to run on the platform.
-            // Same "shipped in the box" logic as Sega bundling Sewer Shark with the
-            // Sega CD. Myst (Cyan/Broderbund) was packed with many CD-ROM-equipped
-            // Performa and Power Macintosh models starting 1993-94 — notable given
-            // Myst itself was built in HyperCard, an Apple technology. Pangea
-            // Software is the strongest case: Apple signed a formal deal with them
-            // in 1995 to bundle their games with new Macs, lasting until the 2006
-            // Intel transition (Power Pete, later Bugdom, Nanosaur, Cro-Mag Rally,
-            // Otto Matic). Callisto Corporation (Spin Doctor, Super Maze Wars) and
-            // Velocity (Spectre, Spectre Supreme, developed by Peninsula Gameworks
-            // and Green Dragon Creations respectively) were both pre-installed
-            // across many Performa models. Edmark (Millie's Math House, Thinkin'
-            // Things, developed by Theatrix Interactive) shipped with most
-            // family-oriented Performa units. Disney Interactive (Aladdin Activity
-            // Center, Lion King Animated Storybook, developed by Gryphon Software)
-            // is included on the same full-catalog logic as everything else here —
-            // and there's a real thread to lean on: Pixar's Steve Jobs connection
-            // makes Disney Interactive something like Pixar's own LucasArts.
-            // DMA Design (Lemmings, bundled with many Performa and Quadra models)
-            // is the deepest cut: DMA's early games were published by Psygnosis —
-            // who became Sony's first acquisition when Sony launched its own
-            // first-party studio for Sega CD and eventually PS1 — meaning Lemmings'
-            // bundling threads directly into both the Apple and Sony sides of this
-            // project's entire multi-year lens simultaneously.
-            'cyan worlds',
-            'pangea software',
-            'callisto corporation',
-            'velocity development',
-            'velocity inc',
-            'peninsula gameworks',
-            'green dragon creations',
-            'edmark',
-            'theatrix interactive',
-            'disney interactive',
-            'dma design',
-
-            // v7.7.1: Rockstar North — DMA Design's later identity after its 2002
-            // rename. Per project philosophy applied consistently everywhere else
-            // (Rare, FromSoftware, PlatinumGames, etc.): once a studio's lineage
-            // earns a place in the Apple/Nintendo/Sony story, that thread is
-            // tracked forward permanently, not just for the era it was earned in.
-            // DMA Design's Lemmings was bundled with many Performa/Quadra models;
-            // that studio is Rockstar North today. In practice this barely moves
-            // any ranking — Grand Theft Auto doesn't need the help — but the
-            // consistency of the rule matters more than the practical effect.
-            'rockstar north',
-
-            // v7.7.2: Rockstar Games — added at the PUBLISHER level specifically,
-            // on different grounds than the Rockstar North entry above. Rockstar
-            // Games was founded independently in December 1998 (built from BMG
-            // Interactive's publishing staff, the Houser brothers included) and
-            // only acquired DMA Design nine months later in September 1999 — DMA
-            // did not give birth to Rockstar; it was absorbed into an
-            // already-existing publishing label, the same way Rockstar Toronto,
-            // Rockstar Vienna, and Rockstar Vancouver were. So this isn't a
-            // lineage claim — it's the same publisher-level logic already applied
-            // to 'nintendo' and 'sony' as bare entries elsewhere on this list:
-            // Rockstar Games has been the single continuous publishing identity
-            // across every mainline release since 1998 regardless of which
-            // internal studio (North, San Diego, Vancouver, Leeds) built it. This
-            // is what pulls in Red Dead Redemption, RDR2, Max Payne 3, Bully, and
-            // L.A. Noire — none developed by Rockstar North, all published under
-            // this single umbrella.
-            'rockstar games',
-
-            // v7.4.3: Q-Games. Founded by ex-Argonaut programmer Dylan Cuthbert
-            // after his time at Sony Computer Entertainment (where he developed
-            // the influential "ducks in a bath" PS2 tech demo and Blasto).
-            // Q-Games became a genuine second-party partner to Sony — the
-            // PixelJunk series was published on PlayStation Network worldwide,
-            // and Q-Games developed core PS3 OS technology directly for Sony,
-            // including the XMB interface and its visualizers. A fitting
-            // counterpart to the Argonaut/Nintendo entry above: same lineage of
-            // programmer, opposite console family.
-            'q-games'
-        ];
-
-        // v5.6.5: Expanded both affiliated lists with the full Nintendo and PlayStation
-        // second-party rosters, including studios contracted for only select titles
-        // (PlatinumGames, Koei Tecmo/Omega Force/Team Ninja, FromSoftware). Per
-        // deliberate decision, these multiplatform studios' ENTIRE catalogs receive
-        // the boost, not just their Nintendo/Sony-contracted titles — the philosophy
-        // being that a studio's broader body of work (Nier Automata, Elden Ring, Dead
-        // or Alive) is itself part of why Nintendo/Sony sought them out for second-party
-        // work in the first place. The relationship retroactively colors the whole
-        // catalog, the same logic already applied to Bungie and Rare.
-        // Rare is included for its full catalog regardless of era (N64 through Xbox/
-        // Xbox 360), consistent with the original decision to treat the studio as part
-        // of the Nintendo lineage in whole, not just its pre-Microsoft-acquisition years.
-        // Wolf Team (pre-rebrand Namco Tales Studio, developer of the earliest Tales
-        // games) is handled separately under the Namco-specific developer list below,
-        // not here, since it should receive the Namco boost rather than the flat
-        // affiliated rate. Bandai Namco Studios itself is excluded from this list
-        // entirely since it's already covered by the separate Namco-specific boost.
-        const NINTENDO_AFFILIATED_DEVELOPERS = [
-            // Nintendo lineage
-            'nintendo',
-            'the pokemon company',
-            'bullet-proof software',
-            'hal laboratory',
-            'hal america',
-            'game freak',
-            'monolith soft',
-            'retro studios',
-            'intelligent systems',
-            'creatures inc',
-            'nd cube',
-            'grezzo',
-            'camelot',
-            'alphadream',
-            'brownie brown',
-            '1-up studio',
-            'jupiter corporation',
-            'ambrella',
-            'skip ltd',
-            'rare',
-            'rareware',
-            'hudson soft',
-            'hudson entertainment',
-            'ape inc',
-            'tose',
-            'arzest',
-            'syn sophia',
-            'arika',
-            'ganbarion',
-            'genius sonority',
-            'paon',
-            'treasure',
-            'mistwalker',
-            'next level games',
-            'vanpool',
-            'good-feel',
-            'mercurysteam',
-            'koei tecmo',
-            'omega force',
-            'team ninja',
-            'platinumgames',
-            'acclaim',
-            'ljn',
-            'iguana entertainment',
-            'sculptured software',
-            'arena entertainment',
-            'valiant comics',
-            'mirrorsoft',
-
-            // TurboGrafx-16/Hudson lineage — modern era.
-            'nicalis',
-            'flying tiger',
-
-            // v7.4.3: Argonaut Software — see rationale in
-            // NINTENDO_AFFILIATED_PUBLISHERS above.
-            'argonaut',
-
-            // v7.9.0: Mario edutainment licensing cluster — see full rationale in
-            // NINTENDO_AFFILIATED_PUBLISHERS above.
-            'software toolworks',
-            'mindscape',
-            'interplay',
-            'radical entertainment',
-            'knowledge adventure'
-        ];
-
-        const SONY_AFFILIATED_DEVELOPERS = [
-            // Sony lineage
-            'sony',
-            'apple',
-            'rac7',
-            'cbs electronics',
-            'cbs software',
-            'psygnosis',
-            'studio liverpool',
-            'guerrilla games',
-            'naughty dog',
-            'insomniac games',
-            'sucker punch',
-            'media molecule',
-            'evolution studios',
-            'polyphony digital',
-            'japan studio',
-            'team asobi',
-            'bend studio',
-            'san diego studio',
-            'zipper interactive',
-            'bigbig studios',
-            'ready at dawn',
-            'firesprite',
-            'housemarque',
-            'bluepoint games',
-            'nixxes software',
-            'bungie',
-            'arrowhead',
-            'kojima productions',
-            'shift up',
-            'fromsoftware',
-            'sumo digital',
-            'ember lab',
-            'media.vision',
-            'supermassive games',
-            'quantic dream',
-            'clap hanz',
-            'thatgamecompany',
-            'novarama',
-            'relentless software',
-            'game republic',
-            'eurocom',
-            'ballistic moon',
-            'superbot entertainment',
-
-            // Sony Imagesoft Sega CD second-party studios (early 1990s).
-            'malibu interactive',
-            'core design',
-            'ringler studios',
-            'absolute entertainment',
-            'imagineering',
-            "traveller's tales",
-            'kogado',
-
-            // CSG/Sony Imagesoft NES/GB/SNES era developers (1989-1994).
-            'software creations',
-            'probe software',
-            'probe entertainment',
-            'acclaim studios london',
-            'acclaim cheltenham',
-            'sensible software',
-            'spidersoft',
-            'motivetime',
-            'outside directors',
-            'park place productions',
-            'sting entertainment',
-            'tiertex',
-            'teque',
-            'ocean software',
-            'ukiyotei',
-            'propaganda code',
-            'bits studios',
-            'bits studio',
-            'teeny weeny games',
-            'perfect 10 productions',
-            'perfect entertainment',
-            'factor 5',
-            'kitty group',
-            'technos japan',
-
-            // Apple II / early Mac era defining publishers.
-            'mecc',
-            'broderbund',
-            'sierra',
-            'infocom',
-            'epyx',
-            'sublogic',
-            'muse software',
-            'ubisoft',
-
-            // v7.7.0: Apple/Mac hardware-bundled game developers — see full
-            // rationale in SONY_AFFILIATED_PUBLISHERS above.
-            'cyan worlds',
-            'pangea software',
-            'callisto corporation',
-            'velocity development',
-            'velocity inc',
-            'peninsula gameworks',
-            'green dragon creations',
-            'edmark',
-            'theatrix interactive',
-            'disney interactive',
-            'dma design',
-
-            // v7.7.1: Rockstar North — see rationale in SONY_AFFILIATED_PUBLISHERS
-            // above.
-            'rockstar north',
-
-            // v7.4.3: Q-Games — see rationale in SONY_AFFILIATED_PUBLISHERS above.
-            'q-games'
-        ];
-
-        // v5.4.8: Namco gets its own two-tier boost separate from the general affiliated
-        // list. Namco's relationship with Sony is deeper than a typical third party —
-        // the PS1 hardware was essentially built around Namco's System 22 arcade board,
-        // Ridge Racer and Tekken defined the PS1 launch, and Sony published Namco titles
-        // in Western territories. However Namco was never owned by Sony, so it sits in
-        // its own category: above general third parties but handled separately from the
-        // core Nintendo/Sony owned studios.
-        // This also addresses the early PS1 Tekken/Ridge Racer data sparsity problem
-        // identified during calibration.
-        // v7.9.7: Recalibrated from 1.5x to 2.5x. Anchor case: Tekken 8 in 2024,
-        // Namco's flagship-tier franchise the same way Zelda is for Nintendo, was
-        // landing at #36 (739) even with the boost applied — well below where a
-        // "deep, decades-long partner" title should sit relative to the Sony/
-        // Nintendo/Ubisoft cluster. At 2.5x, Tekken 8 lands ~#18 (1232), solidly
-        // mid-pack among affiliated titles without unseating any of them. The
-        // 1.5x rate undersold the actual depth of the PS1-era partnership once
-        // compared directly against Ubisoft's 3.75x for a looser Apple-lineage
-        // claim (see SONY_AFFILIATED_PUBLISHERS) — Namco's hardware co-development
-        // history is arguably tighter than that thread, so 1.5x was leaving real
-        // value on the table. Stops short of the full Sony-affiliated rate since
-        // Namco was still never owned by Sony the way second-party studios were.
-        const NAMCO_PUBLISHERS = ['namco', 'bandai namco'];
-        // v5.6.4: Namco developer-side check. Wolf Team developed the earliest Tales
-        // games (Tales of Phantasia, Tales of Destiny) and a range of Sega CD, SNES,
-        // and PS1 titles before being absorbed and rebranded as Namco Tales Studio.
-        // Wolf Team never published its own games, so without this developer check
-        // those early titles would get no Namco treatment at all despite being the
-        // literal predecessor studio to Namco's RPG division.
-        const NAMCO_DEVELOPERS = ['wolf team'];
-        const NAMCO_MULTIPLIER = 2.5;
-
-        // v7.9.7: Sega gets its own tier, on the same terms as Namco — a deep,
-        // decades-long partner that was never owned by Sony, but whose relationship
-        // with Sony specifically (not Nintendo) went well beyond typical third-party
-        // status: Sony Imagesoft's own publishing shifted from NES/Game Boy to
-        // Genesis/Master System/Game Gear before Sony and Sega co-developed Sega CD
-        // hardware, with Sony publishing more Sega CD titles than any other third
-        // party — effectively the R&D prototype for the PS1. Full-catalog-forever
-        // treatment per the same philosophy already applied to Capcom/Konami/Square/
-        // Enix under Pillar: an independent, platform-holder-scale company whose
-        // formative-era relationship colors its entire catalog, not just the titles
-        // from that era. Kept out of SONY_AFFILIATED_* because unlike every entry on
-        // those lists, Sega was never subordinate to Sony — it was a rival platform
-        // holder for most of the relevant decades, the same "peer, not contractor"
-        // distinction that keeps Pillar and Namco gentler than the core affiliated
-        // lists. Ironically this also pulls in Sega's Mario & Sonic Olympics
-        // collaborations with Nintendo — those get the Sega boost here regardless,
-        // same as Ubisoft gets both Sony-lineage and Nintendo-IP boosts where
-        // applicable.
-        // Atlus is included on the same full-catalog logic: Sega Sammy has owned
-        // Atlus outright since 2013, and Atlus's catalog (Persona, Metaphor, Shin
-        // Megami Tensei) is as much a part of modern Sega's identity as any
-        // internally-developed Sega franchise.
-        // Multiplier calibrated against 2024 and 2020 anchor cases: Yakuza: Like a
-        // Dragon was landing at #50 (860) in 2020 despite genuine cultural weight,
-        // and Persona 3 Reload / Metaphor: ReFantazio were landing at #47 (491) and
-        // #44 (555) respectively in 2024 with zero lineage credit. At 3.5x, Metaphor
-        // lands ~#9 (1943) and Persona 3 Reload ~#12 (1719) — rubbing elbows with
-        // the Sony/Nintendo/Ubisoft cluster without overshadowing Mario Kart World,
-        // Clair Obscur, or other top-tier entries. Set just under Ubisoft's 3.75x
-        // standalone rate: Sega's Sony partnership runs deep, but Sega's decades as
-        // a rival platform holder in its own right keep it a notch below a company
-        // that was never a hardware competitor.
-        const SEGA_PUBLISHERS = ['sega', 'atlus'];
-        const SEGA_DEVELOPERS = ['sega', 'atlus'];
-        const SEGA_MULTIPLIER = 3.5;
-
-        // v5.4.4: Mainstream titles with massive console audiences that generate
-        // genuine cultural penetration but whose players skew away from IGDB engagement.
-        // Less aggressive than the major league sports correction — these titles do
-        // appear in IGDB data, they're just chronically underweighted relative to
-        // their true "everyone is playing this" footprint.
-        // Philosophy: correct the floor, accept the ceiling.
-        const MAINSTREAM_TITLE_SLUGS = [
-            'call-of-duty',
-            'madden'
-        ];
-        const MAINSTREAM_MULTIPLIER = 2.0;
-
-        // v8.3.0 EXPERIMENT: Critical Darling rearchitected AGAIN — from a
-        // multiplier (flat in v8.1.0, then quadratic-and-stacking in v8.2.0)
-        // to a percentile-blend composite score. This replaces the multiplier
-        // approach entirely rather than tuning its constants further.
-        //
-        // Why the multiplier approach was abandoned: v8.2.0 could push
-        // Hades II (2025) and Slay the Spire (2019) up meaningfully but never
-        // close to their real Metacritic-relative standing (Hades II is
-        // Metacritic's #2 game of 2025; it landed at #21 under v8.2.0) without
-        // an enormous ceiling constant — and that same enormous constant,
-        // applied to Balatro (2024), overshot its target by 3x (rocketing it
-        // to roughly #2 instead of the #9 the Metacritic comparison implied).
-        // The reverse-engineered "required ceiling" to hit each anchor's
-        // target rank was 20.0 for Hades II, 4.6 for Balatro, and 16.8 for
-        // Slay the Spire — not correlated with critic score (Balatro's own
-        // critic score, 91, is HIGHER than Slay the Spire's ~85, yet needed a
-        // much SMALLER boost). That's the tell: the needed boost depends on
-        // how hype-starved a game's base is relative to its OWN year's field,
-        // which a pure function of critic score has no visibility into. No
-        // single constant (or curve shape) can satisfy arbitrary target ranks
-        // across different years/games under a multiplicative model.
-        //
-        // New approach: stop multiplying critic score onto the hype base.
-        // Instead, treat hype and critic quality as two independent axes,
-        // percentile-rank every filtered game in a given year against its OWN
-        // year's pool on each axis, then blend the two percentiles into a
-        // single composite score. This makes critic score genuinely
-        // rank-competitive regardless of a game's raw buzz, because it's
-        // compared against its actual year's competition rather than run
-        // through a fixed formula:
-        //
-        //   hypePercentile   = this game's percentile rank, by hypeScore
-        //                       (base engagement * every multiplier EXCEPT
-        //                       Critical Darling — sports/affiliated/Namco/
-        //                       Sega/Pillar/IP/CDI/VB/WS/Digital Pictures all
-        //                       still apply exactly as before), among all
-        //                       filtered games that year.
-        //   criticPercentile = this game's percentile rank, by
-        //                       aggregatedRating, among filtered games THAT
-        //                       YEAR WITH a nonzero aggregatedRating. Games
-        //                       with no critic data are NOT penalized to the
-        //                       bottom of this axis — see
-        //                       computeFinalScore() below for how they're
-        //                       handled instead.
-        //   finalScore = hypePercentile * HYPE_WEIGHT
-        //              + criticPercentile * QUALITY_WEIGHT
-        //
-        // HYPE_WEIGHT/QUALITY_WEIGHT sum to 1. Starting split of 0.6/0.4
-        // deliberately keeps this a "hype index" first — raw buzz still
-        // carries more weight than critic consensus — while giving critic
-        // score enough leverage to meaningfully move genuinely acclaimed,
-        // lower-hype titles up several tiers rather than being structurally
-        // capped by their own base the way the multiplier model was. This is
-        // a starting point, not a calibrated final value — same status as
-        // CRITICAL_DARLING_FLOOR/CEILING_MULT were in v8.1.0/v8.2.0. Needs
-        // real per-year data (this environment has no live IGDB access) to
-        // check whether 0.6/0.4 actually lands Hades II near its Metacritic
-        // rank without overshooting the way v8.2.0's ceiling did, and to
-        // retune from there.
-        //
-        // This is explicitly an experiment per the plan agreed with the
-        // project owner: if the percentile-blend results don't look right
-        // against real data, revert to v8.2.0 (or v8.1.0) and go back to
-        // tuning the multiplier-based Critical Darling boost instead.
-        const HYPE_WEIGHT = 0.6;
-        const QUALITY_WEIGHT = 0.4;
-
-
-        // v7.8.0: PopScore (v7.5.0-v7.7.x) has been removed from scoring. It was
-        // an additive base-score contributor sourced from IGDB's
-        // popularity_primitives endpoint (Want to Play/Playing/Played), but proved
-        // too volatile day-to-day for a stable ranking — since the values are
-        // normalized shares of total catalog activity, a single major release
-        // entering the pool can visibly shrink every other game's score on a
-        // given day with no underlying change in that game's real popularity.
-        // The backend fetch has also been removed (see backend v5.3.0) since
-        // there's no reason to pay the extra API round-trip for data that's no
-        // longer used. If PopScore is ever revisited, the removed logic is
-        // preserved in version history rather than reconstructed from scratch.
-
-        // IGDB Category Blacklist: 1=DLC, 2=Expansion, 3=Bundle, 4=Standalone Expansion, 5=Mod, 6=Episode, 7=Season
-        const BLACKLISTED_CATEGORIES = [1, 2, 3, 4, 5, 6, 7];
-
-        function populateYearDropdown() {
-            const select = document.getElementById('yearSelect');
-            for (let year = 2026; year >= 1977; year--) {
-                const opt = document.createElement('option');
-                opt.value = year; opt.textContent = year;
-                select.appendChild(opt);
+        // The IGDB export stores these columns as JSON-array-looking strings,
+        // e.g. ["Nintendo Switch 2"] or ["Jul 23, 2026 (Worldwide [WW])"].
+        // Parse defensively since blank cells aren't valid JSON.
+        function parseJsonArrayField(raw) {
+            if (!raw) return [];
+            try {
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                return [];
             }
         }
 
-        function isMainstreamTitle(game) {
-            if (!game.slug) return false;
-            return MAINSTREAM_TITLE_SLUGS.some(keyword => game.slug.includes(keyword));
+        // We only care about the year, not the month/day, and a game can list
+        // several regional release dates. Pull every 4-digit year out of the
+        // field and use the earliest one.
+        function extractEarliestYear(releaseDateField) {
+            const dates = parseJsonArrayField(releaseDateField);
+            const text = dates.length ? dates.join(' ') : (releaseDateField || '');
+            const matches = text.match(/\b(19|20)\d{2}\b/g);
+            if (!matches) return null;
+            return Math.min(...matches.map(Number));
         }
 
-        function isMajorLeagueTitle(game) {
-            if (!game.slug) return false;
-            return MAJOR_LEAGUE_TITLE_SLUGS.some(keyword => game.slug.includes(keyword));
+        // --- COVER ART -------------------------------------------------------
+        // Cache shape in localStorage: { "348977": "abc123", ... } mapping
+        // IGDB game ID -> IGDB cover image_id. Covers essentially never change
+        // for a given game, so once fetched they're kept indefinitely and only
+        // re-requested for IDs the cache hasn't seen before.
+        function loadCoverCache() {
+            try {
+                const raw = localStorage.getItem(COVER_CACHE_KEY);
+                return raw ? JSON.parse(raw) : {};
+            } catch (e) {
+                return {};
+            }
         }
 
-        function isNamcoTitle(game) {
-            const publisherMatch = game.publishers && game.publishers.some(pub =>
-                NAMCO_PUBLISHERS.some(n => pub.toLowerCase().includes(n))
-            );
-            const developerMatch = game.developers && game.developers.some(dev =>
-                NAMCO_DEVELOPERS.some(n => dev.toLowerCase().includes(n))
-            );
-            return publisherMatch || developerMatch;
+        function saveCoverCache(cache) {
+            try {
+                localStorage.setItem(COVER_CACHE_KEY, JSON.stringify(cache));
+            } catch (e) {
+                // localStorage full or unavailable — non-fatal, covers just
+                // won't persist between visits.
+                console.warn('Could not save cover cache:', e);
+            }
         }
 
-        // v7.9.7: Sega/Atlus check, same shape as isNamcoTitle — standalone tier,
-        // never folded into the Sony affiliated lists. See rationale on
-        // SEGA_PUBLISHERS above.
-        function isSegaTitle(game) {
-            const publisherMatch = game.publishers && game.publishers.some(pub =>
-                SEGA_PUBLISHERS.some(s => pub.toLowerCase().includes(s))
-            );
-            const developerMatch = game.developers && game.developers.some(dev =>
-                SEGA_DEVELOPERS.some(s => dev.toLowerCase().includes(s))
-            );
-            return publisherMatch || developerMatch;
+        // Fetches covers for any game IDs not already in the cache, in
+        // batches, and merges the results back into (and returns) the cache.
+        async function fetchMissingCovers(allIds, cache) {
+            const missing = [...new Set(allIds)].filter(id => id != null && !(id in cache));
+            if (!missing.length) return cache;
+
+            for (let i = 0; i < missing.length; i += COVER_BATCH_SIZE) {
+                const batch = missing.slice(i, i + COVER_BATCH_SIZE);
+                try {
+                    const response = await fetch(`${COVER_ART_URL}?ids=${batch.join(',')}`);
+                    const data = await response.json();
+                    if (data && data.covers) {
+                        Object.assign(cache, data.covers);
+                    }
+                } catch (e) {
+                    console.warn('Cover art batch failed:', e);
+                    // Continue with remaining batches even if one fails.
+                }
+            }
+
+            saveCoverCache(cache);
+            return cache;
         }
 
-        // v7.4.0: isAffiliatedPublisher is now split into isNintendoAffiliated and
-        // isSonyAffiliated, each checking against its own publisher/developer list
-        // so the two lineages can carry different multipliers. isAffiliatedPublisher
-        // is kept as a combined helper (Nintendo OR Sony) for the handful of places
-        // that only need to know "is this game affiliated with either lineage at
-        // all" — e.g. the Nintendo-IP-licensed-to-third-parties exclusion check,
-        // which shouldn't fire twice regardless of which lineage a title belongs to.
-        function isNintendoAffiliated(game) {
-            const publisherMatch = game.publishers && game.publishers.some(pub =>
-                NINTENDO_AFFILIATED_PUBLISHERS.some(aff => pub.toLowerCase().includes(aff))
-            );
-            const developerMatch = game.developers && game.developers.some(dev =>
-                NINTENDO_AFFILIATED_DEVELOPERS.some(aff => dev.toLowerCase().includes(aff))
-            );
-            return publisherMatch || developerMatch;
+        // --- LOAD + PARSE ---------------------------------------------------
+        async function loadGames() {
+            const content = document.getElementById('content');
+            content.innerHTML = '<div class="loading">Loading Index...</div>';
+            try {
+                const response = await fetch(`${CSV_URL}?_cb=${Date.now()}`);
+                if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
+                const csvText = await response.text();
+                const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
+
+                const gamesByYear = {};
+
+                parsed.data.forEach(row => {
+                    const year = extractEarliestYear(row.release_date);
+                    if (!year) return;
+
+                    const ratingRaw = row.rating ? row.rating.trim() : '';
+                    const rating = ratingRaw !== '' ? parseFloat(ratingRaw) : null;
+
+                    const gameId = row.id ? parseInt(row.id, 10) : null;
+
+                    const game = {
+                        id: (gameId !== null && !isNaN(gameId)) ? gameId : null,
+                        name: row.game,
+                        url: row.url,
+                        rating: (rating !== null && !isNaN(rating)) ? rating : null,
+                        platforms: parseJsonArrayField(row.platforms)
+                    };
+
+                    if (!gamesByYear[year]) gamesByYear[year] = [];
+                    gamesByYear[year].push(game);
+                });
+
+                // Sort each year: rated games descending by rating; unrated
+                // games pushed to the bottom, left in their original (CSV) order.
+                Object.keys(gamesByYear).forEach(year => {
+                    gamesByYear[year].sort((a, b) => {
+                        if (a.rating === null && b.rating === null) return 0;
+                        if (a.rating === null) return 1;
+                        if (b.rating === null) return -1;
+                        return b.rating - a.rating;
+                    });
+                });
+
+                window.__gamesByYear = gamesByYear;
+                populateYearDropdown(Object.keys(gamesByYear).map(Number));
+
+                const select = document.getElementById('yearSelect');
+
+                // Render immediately without covers so the list appears fast...
+                displayGames(gamesByYear[select.value] || []);
+
+                // ...then fetch any missing covers and re-render once they're in.
+                const allIds = Object.values(gamesByYear).flat().map(g => g.id);
+                window.__coverCache = await fetchMissingCovers(allIds, loadCoverCache());
+                displayGames(gamesByYear[select.value] || []);
+
+            } catch (e) {
+                console.error(e);
+                content.innerHTML = `<div class="loading" style="color:red">System Connection Error.</div>`;
+            }
         }
 
-        function isSonyAffiliated(game) {
-            const publisherMatch = game.publishers && game.publishers.some(pub =>
-                SONY_AFFILIATED_PUBLISHERS.some(aff => pub.toLowerCase().includes(aff))
-            );
-            const developerMatch = game.developers && game.developers.some(dev =>
-                SONY_AFFILIATED_DEVELOPERS.some(aff => dev.toLowerCase().includes(aff))
-            );
-            return publisherMatch || developerMatch;
-        }
-
-        function isAffiliatedPublisher(game) {
-            return isNintendoAffiliated(game) || isSonyAffiliated(game);
-        }
-
-        function isCDiNintendoTitle(game) {
-            if (!game.platforms || !game.slug) return false;
-            return game.platforms.includes(CDI_PLATFORM_ID) &&
-                CDI_NINTENDO_SLUGS.some(s => game.slug.includes(s));
-        }
-
-        function isVirtualBoyTitle(game) {
-            if (!game.platforms) return false;
-            return game.platforms.includes(VB_PLATFORM_ID);
-        }
-
-        function isWonderSwanTitle(game) {
-            if (!game.platforms) return false;
-            return game.platforms.some(p => WS_PLATFORM_IDS.includes(p));
-        }
-
-        function isNintendoIPTitle(game) {
-            if (!game.slug) return false;
-            return NINTENDO_IP_SLUGS.some(s => game.slug.includes(s));
-        }
-
-        function isPillarTitle(game) {
-            const pubMatch = game.publishers && game.publishers.some(pub =>
-                PILLAR_PUBLISHERS.some(p => pub.toLowerCase().includes(p))
-            );
-            const devMatch = game.developers && game.developers.some(dev =>
-                PILLAR_PUBLISHERS.some(p => dev.toLowerCase().includes(p))
-            );
-            return pubMatch || devMatch;
-        }
-
-        function isDigitalPicturesTitle(game) {
-            if (!game.developers) return false;
-            return game.developers.some(dev =>
-                DIGITAL_PICTURES_DEVELOPERS.some(d => dev.toLowerCase().includes(d))
-            );
-        }
-
-        // v8.3.0: percentile helper. Ranks each item in `items` by
-        // `valueFn(item)` and returns a Map from item -> percentile (0-100,
-        // where 100 = highest value in the set). Ties share the same
-        // percentile (computed by rank position, not dense rank, so a run of
-        // identical values still spreads slightly by array order — acceptable
-        // for this use since exact ties are rare on both hype and critic
-        // score axes at this data volume).
-        function computePercentiles(items, valueFn) {
-            const map = new Map();
-            const n = items.length;
-            if (n === 0) return map;
-            if (n === 1) { map.set(items[0], 100); return map; }
-            const sorted = [...items].sort((a, b) => valueFn(a) - valueFn(b));
-            sorted.forEach((item, i) => {
-                map.set(item, (i / (n - 1)) * 100);
+        function populateYearDropdown(years) {
+            const select = document.getElementById('yearSelect');
+            select.innerHTML = '';
+            years.sort((a, b) => b - a);
+            years.forEach(year => {
+                const opt = document.createElement('option');
+                opt.value = year; opt.textContent = year;
+                select.appendChild(opt);
             });
-            return map;
         }
 
         function displayGames(gamesList) {
             const content = document.getElementById('content');
 
-            let filtered = gamesList.filter(game => {
-                const isCorrectPlatform = game.platforms.some(id => ALLOWED_PLATFORMS.includes(id));
-                const isBlacklistedCategory = game.category && BLACKLISTED_CATEGORIES.includes(game.category);
-                return isCorrectPlatform && !isBlacklistedCategory;
-            });
-
-            // --- Pass 1: hypeScore, exactly the v8.1.0/v8.2.0 pipeline, MINUS
-            // Critical Darling. Every other multiplier (sports/major league/
-            // mainstream/affiliated/Namco/Sega/Pillar/Nintendo IP/CDI/VB/WS/
-            // Digital Pictures) still applies unchanged.
-            filtered.forEach(game => {
-                let score = ((game.reviews || 0) * 3) + (game.follows || 0) + (game.hypes || 0);
-
-                if (game.genres && game.genres.includes(GENRE_SPORT_ID)) {
-                    score = Math.round(score * SPORT_MULTIPLIER);
-                }
-                if (isMajorLeagueTitle(game)) {
-                    score = Math.round(score * MAJOR_LEAGUE_MULTIPLIER);
-                }
-                if (isMainstreamTitle(game)) {
-                    score = Math.round(score * MAINSTREAM_MULTIPLIER);
-                }
-                if (isNintendoAffiliated(game)) {
-                    score = Math.round(score * NINTENDO_AFFILIATED_MULTIPLIER);
-                } else if (isSonyAffiliated(game)) {
-                    score = Math.round(score * SONY_AFFILIATED_MULTIPLIER);
-                }
-                if (isNamcoTitle(game)) {
-                    score = Math.round(score * NAMCO_MULTIPLIER);
-                }
-                if (isSegaTitle(game)) {
-                    score = Math.round(score * SEGA_MULTIPLIER);
-                }
-                if (isPillarTitle(game)) {
-                    score = Math.round(score * PILLAR_MULTIPLIER);
-                }
-                const isUbisoftTitle = game.publishers && game.publishers.some(p => p.toLowerCase().includes('ubisoft'));
-                if (isNintendoIPTitle(game) && (!isAffiliatedPublisher(game) || isUbisoftTitle) && !isCDiNintendoTitle(game)) {
-                    score = Math.round(score * NINTENDO_IP_MULTIPLIER);
-                }
-                if (isCDiNintendoTitle(game)) {
-                    score = Math.round(score * CDI_MULTIPLIER);
-                }
-                if (isVirtualBoyTitle(game)) {
-                    score = Math.round(score * VB_MULTIPLIER);
-                }
-                if (isWonderSwanTitle(game)) {
-                    score = Math.round(score * WS_MULTIPLIER);
-                }
-                if (isDigitalPicturesTitle(game)) {
-                    score = Math.round(score * DIGITAL_PICTURES_MULTIPLIER);
-                }
-
-                game.hype_score_raw = score;
-            });
-
-            // Drop zero/negative-hype games before percentile-ranking, same
-            // as the old `hype_score > 0` filter — a game with no engagement
-            // at all shouldn't be in the percentile pool skewing the curve.
-            filtered = filtered.filter(game => game.hype_score_raw > 0);
-
-            if (!filtered.length) {
+            if (!gamesList.length) {
                 content.innerHTML = '<div class="loading">No records found for this year.</div>';
                 return;
             }
 
-            // --- Pass 2: percentile-rank on both axes, within THIS year's
-            // filtered pool only.
-            const hypePercentiles = computePercentiles(filtered, g => g.hype_score_raw);
-
-            const criticEligible = filtered.filter(g => (g.aggregatedRating || 0) > 0);
-            const criticPercentiles = computePercentiles(criticEligible, g => g.aggregatedRating);
-
-            // --- Pass 3: blend. Games with no critic data get their full
-            // weight redistributed to the hype axis rather than being
-            // penalized to a 0 criticPercentile — most retro/niche titles
-            // have no aggregated_rating in IGDB at all, and treating "no
-            // critic coverage" the same as "critics hated it" would bury
-            // the majority of the catalog for a data-availability reason,
-            // not a quality one.
-            filtered.forEach(game => {
-                const hypePct = hypePercentiles.get(game) || 0;
-                if (criticPercentiles.has(game)) {
-                    const criticPct = criticPercentiles.get(game);
-                    game.hype_score = Math.round((hypePct * HYPE_WEIGHT) + (criticPct * QUALITY_WEIGHT));
-                } else {
-                    game.hype_score = Math.round(hypePct);
-                }
-            });
-
-            filtered.sort((a, b) => b.hype_score - a.hype_score);
-
             const grid = document.createElement('div');
             grid.className = 'games-grid';
 
-            filtered.forEach((game, index) => {
+            const coverCache = window.__coverCache || {};
+
+            gamesList.forEach((game, index) => {
                 const card = document.createElement('a');
-                card.className = 'game-card';
-                card.href = `https://www.igdb.com/games/${game.slug}`;
+                card.className = 'game-card' + (index >= 5 ? ' below-top5' : '');
+                card.href = game.url || '#';
                 card.target = '_blank';
-                const coverUrl = game.cover ? `https://images.igdb.com/igdb/image/upload/t_cover_small/${game.cover}.jpg` : '';
+                const imageId = game.id != null ? coverCache[game.id] : null;
+                const coverUrl = imageId ? `https://images.igdb.com/igdb/image/upload/t_cover_small/${imageId}.jpg` : '';
                 card.innerHTML = `
                     <div class="game-rank">#${index + 1}</div>
-                    <div class="game-image-container">${game.cover ? `<img class="game-image" src="${coverUrl}" alt="${game.name} cover">` : ''}</div>
+                    <div class="game-image-container">${coverUrl ? `<img class="game-image" src="${coverUrl}" alt="${escapeHtml(game.name)} cover">` : ''}</div>
                     <div class="game-info">
-                        <div class="game-title">${game.name}</div>
-                        <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase;">
-                            Score: <span class="engagement-value">${game.hype_score}</span>
+                        <div class="game-title">${escapeHtml(game.name)}</div>
+                        <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; margin-top:2px;">
+                            ${game.rating !== null
+                                ? `Rating: <span class="engagement-value">${game.rating.toFixed(1)}</span>`
+                                : '<span style="color:#aaa;">Unrated</span>'}
                         </div>
                         <div style="margin-top: 4px;">
-                            ${game.platforms.filter(id => ALLOWED_PLATFORMS.includes(id)).map(id => `<span class="platform-tag">${PLATFORM_NAMES[id] || id}</span>`).join('')}
+                            ${game.platforms.map(p => getPlatformAbbr(p)).filter(Boolean).map(abbr => `<span class="platform-tag">${escapeHtml(abbr)}</span>`).join('')}
                         </div>
                     </div>`;
                 grid.appendChild(card);
@@ -1108,22 +323,11 @@
             content.appendChild(grid);
         }
 
-        async function loadGames(year) {
-            const content = document.getElementById('content');
-            content.innerHTML = '<div class="loading">Loading Index...</div>';
-            try {
-                const response = await fetch(`${GOOGLE_SCRIPT_URL}?year=${year}&_cb=${Date.now()}`);
-                const data = await response.json();
-                displayGames(data.games || []);
-            } catch (e) {
-                console.error(e);
-                content.innerHTML = `<div class="loading" style="color:red">System Connection Error.</div>`;
-            }
-        }
+        document.getElementById('yearSelect').addEventListener('change', e => {
+            displayGames(window.__gamesByYear[e.target.value] || []);
+        });
 
-        populateYearDropdown();
-        document.getElementById('yearSelect').addEventListener('change', e => loadGames(e.target.value));
-        loadGames(2026);
+        loadGames();
     </script>
 </body>
 </html>
