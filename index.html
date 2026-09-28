@@ -46,7 +46,7 @@
         <footer>
             Built by noiseredux &nbsp;·&nbsp; Data powered by IGDB <br>
             A personal index for Sony, Nintendo, and Apple collectors — through the lens of a lifelong fanboy. <br>
-            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.4.1</span>
+            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.5.2</span>
         </footer>
     </div>
 
@@ -798,6 +798,65 @@
         const SEGA_DEVELOPERS = ['sega', 'atlus'];
         const SEGA_MULTIPLIER = 3.5;
 
+        // v9.5.0: Valve gets its own standalone tier, same shape as Sega/Namco.
+        // Rationale: Linux was added to the allowlist in v9.3.0 for its PS2 Linux
+        // Kit / PS3 OtherOS lineage, but Linux itself has no "defining" developers
+        // or publishers — it has always been FOSS. SteamOS changed that in practice.
+        // SteamOS began as a Debian-based distro and is now Arch-based, and the
+        // Steam Deck in particular is why Linux gaming is in a better place today
+        // than it has ever been — a viable, mainstream alternative to Windows PC
+        // gaming rather than a curiosity. That makes Valve the closest thing Linux
+        // has to a first-party platform steward, and the studios that have
+        // developed Valve-published games are part of that same story. Full-catalog
+        // treatment per project philosophy: the relationship colors everything
+        // these studios have made, not just their Valve-published titles.
+        // Kept out of the Sony/Nintendo affiliated lists since Valve is its own
+        // platform holder (peer, not contractor), same reasoning as Sega/Namco.
+        //
+        // Partner/affiliate list, per the rule "anyone who has worked on developing
+        // Valve-published games":
+        //   - Valve (first party: Half-Life, Portal, Left 4 Dead 2, Team Fortress,
+        //     Counter-Strike, Dota, Half-Life: Alyx, etc.)
+        //   - Turtle Rock Studios (developed the original Left 4 Dead; Valve
+        //     acquired the studio in 2008 before it later spun back out)
+        //   - Hidden Path Entertainment (co-developed Counter-Strike: Global Offensive)
+        //   - Gearbox Software (Half-Life: Opposing Force, Blue Shift, Decay;
+        //     Counter-Strike: Condition Zero). NOTE: full-catalog treatment means
+        //     Borderlands and other Gearbox titles get boosted too — if that
+        //     turns out to overreach, this is the first entry to remove.
+        //   - Ritual Entertainment (Counter-Strike: Condition Zero)
+        //
+        // v9.5.1: partner list extended from Wikipedia's "List of Valve games":
+        //   - Facepunch Studios (developed Garry's Mod, whose standalone release
+        //     Valve published in 2006). NOTE: full-catalog treatment means Rust
+        //     and other Facepunch titles get boosted too.
+        //   - Rogue Entertainment (Counter-Strike: Condition Zero collaboration)
+        //   - NuclearVision (Codename Gordon, published by Valve)
+        //   - WeCreateStuff (Portal: Still Alive on Xbox 360)
+        //   - Cloudhead Games (Aperture Hand Lab, published by Valve)
+        //   - Campo Santo (acquired by Valve in 2018; same acquisition logic as
+        //     Turtle Rock). NOTE: full-catalog treatment boosts Firewatch.
+        //
+        // v9.5.2: Nexon added. Nexon developed Counter-Strike Nexon, a
+        // Valve-published game, which puts it on the same footing as every other
+        // studio on this list under the "worked on developing Valve-published
+        // games" rule. NOTE: full-catalog treatment means the rest of Nexon's
+        // catalog (MapleStory, The First Descendant, Dave the Diver, etc.) gets
+        // boosted too.
+        // Deliberately NOT included: Electronic Arts (only ported The Orange Box
+        // to PS3) and Nvidia (only co-made the Portal: Companion Collection port
+        // for Switch). Porting existing Valve collections to other hardware is
+        // not developing a Valve game. Digital Extremes was considered and
+        // rejected — no verifiable Valve connection.
+        // Multiplier is an untested starting guess set equal to the Sony-affiliated
+        // rate (3.75), on the logic that Valve is to Linux gaming roughly what
+        // Sony is to its own lineage. Not yet calibrated against anchor cases
+        // (Half-Life 2, Portal 2, Half-Life: Alyx, Counter-Strike 2) — retune
+        // once seen against real data.
+        const VALVE_PUBLISHERS = ['valve', 'turtle rock', 'hidden path', 'gearbox', 'ritual entertainment', 'facepunch', 'rogue entertainment', 'nuclearvision', 'wecreatestuff', 'cloudhead games', 'campo santo', 'nexon'];
+        const VALVE_DEVELOPERS = ['valve', 'turtle rock', 'hidden path', 'gearbox', 'ritual entertainment', 'facepunch', 'rogue entertainment', 'nuclearvision', 'wecreatestuff', 'cloudhead games', 'campo santo', 'nexon'];
+        const VALVE_MULTIPLIER = 3.75;
+
         // v5.4.4: Mainstream titles with massive console audiences that generate
         // genuine cultural penetration but whose players skew away from IGDB engagement.
         // Less aggressive than the major league sports correction — these titles do
@@ -938,6 +997,19 @@
             return publisherMatch || developerMatch;
         }
 
+        // v9.5.0: Valve/partner check, same shape as isSegaTitle — standalone
+        // tier, never folded into the Sony/Nintendo affiliated lists. See
+        // rationale on VALVE_PUBLISHERS above.
+        function isValveTitle(game) {
+            const publisherMatch = game.publishers && game.publishers.some(pub =>
+                VALVE_PUBLISHERS.some(v => pub.toLowerCase().includes(v))
+            );
+            const developerMatch = game.developers && game.developers.some(dev =>
+                VALVE_DEVELOPERS.some(v => dev.toLowerCase().includes(v))
+            );
+            return publisherMatch || developerMatch;
+        }
+
         // v7.4.0: isAffiliatedPublisher is now split into isNintendoAffiliated and
         // isSonyAffiliated, each checking against its own publisher/developer list
         // so the two lineages can carry different multipliers. isAffiliatedPublisher
@@ -1061,6 +1133,9 @@
                 }
                 if (isSegaTitle(game)) {
                     score = Math.round(score * SEGA_MULTIPLIER);
+                }
+                if (isValveTitle(game)) {
+                    score = Math.round(score * VALVE_MULTIPLIER);
                 }
                 if (isPillarTitle(game)) {
                     score = Math.round(score * PILLAR_MULTIPLIER);
