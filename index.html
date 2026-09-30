@@ -157,16 +157,35 @@
             content.appendChild(grid);
         }
 
+        async function fetchGames(year) {
+            const response = await fetch(`${GOOGLE_SCRIPT_URL}?year=${year}&_cb=${Date.now()}`);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            const text = await response.text();
+            try {
+                return JSON.parse(text);
+            } catch (parseErr) {
+                throw new Error('Non-JSON response from backend');
+            }
+        }
+
         async function loadGames(year) {
             const content = document.getElementById('content');
             content.innerHTML = '<div class="loading">Loading Index...</div>';
             try {
-                const response = await fetch(`${GOOGLE_SCRIPT_URL}?year=${year}&_cb=${Date.now()}`);
-                const data = await response.json();
+                const data = await fetchGames(year);
                 displayGames(data.games || []);
-            } catch (e) {
-                console.error(e);
-                content.innerHTML = `<div class="loading" style="color:red">System Connection Error.</div>`;
+            } catch (firstErr) {
+                // One retry on a transient failure (bad JSON, timeout, etc.)
+                // before showing the user an error.
+                try {
+                    const data = await fetchGames(year);
+                    displayGames(data.games || []);
+                } catch (secondErr) {
+                    console.error(firstErr, secondErr);
+                    content.innerHTML = `<div class="loading" style="color:red">System Connection Error.</div>`;
+                }
             }
         }
 
