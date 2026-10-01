@@ -46,7 +46,7 @@
         <footer>
             Built by noiseredux &nbsp;·&nbsp; Data powered by IGDB <br>
             A personal index for Sony, Nintendo, and Apple collectors — through the lens of a lifelong fanboy. <br>
-            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.6.0</span>
+            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.6.1</span>
         </footer>
     </div>
 
@@ -158,11 +158,30 @@
         // IGDB engagement, either due to platform sparsity, regional bias, or the
         // fact that controversy and notoriety generate hype even without positive reception.
 
-        // CDi Nintendo titles: Zelda and Mario games on CDi were massive gaming news
-        // in 1993-1994 despite poor quality. CD-ROM Zelda was mind-blowing concept.
-        // Raw IGDB data is near-zero; 15x needed to reach rational placement.
+        // CDi: originally scoped to only Zelda/Mario-slugged titles on CD-i
+        // (the infamous licensed Zelda games — massive gaming news in 1993-1994
+        // despite poor quality, CD-ROM Zelda being a mind-blowing concept at the
+        // time). The 60x figure was reverse-engineered specifically against
+        // those Zelda titles to reach rational placement (comment previously
+        // said "15x" — stale leftover from an earlier recalibration that
+        // updated the constant but not the comment).
+        // v9.6.0: widened from a slug-matched subset to the entire CD-i
+        // platform, matching how VB_MULTIPLIER and WS_MULTIPLIER already work
+        // below — CD-i as a whole is exactly the kind of "unloved console"
+        // those two corrections exist for, and scoping the correction to only
+        // Nintendo-licensed titles was an inconsistency with that established
+        // platform-wide pattern.
+        // Caveat worth flagging: unlike VB_MULTIPLIER/WS_MULTIPLIER, which were
+        // derived holistically against their whole platforms, 60x was
+        // calibrated narrowly against the Zelda titles' specific extreme case —
+        // near-zero IGDB data colliding with enormous real-world notoriety. A
+        // random non-Nintendo CD-i title with modest-but-nonzero engagement
+        // could land disproportionately high under the same multiplier, since
+        // it never had the Zelda-level notoriety the figure was tuned for.
+        // Worth a look at CD-i's other titles (the Mediamatic streak, Thunder
+        // in Paradise, etc.) once live, the same way other multipliers in this
+        // project get checked against real anchor cases after a scope change.
         const CDI_PLATFORM_ID = 117;
-        const CDI_NINTENDO_SLUGS = ['zelda', 'mario', 'link'];
         const CDI_MULTIPLIER = 60.0;
 
         // Virtual Boy: Huge marketing spend, Nintendo Power coverage, Blockbuster
@@ -1087,10 +1106,9 @@
             return isNintendoAffiliated(game) || isSonyAffiliated(game);
         }
 
-        function isCDiNintendoTitle(game) {
-            if (!game.platforms || !game.slug) return false;
-            return game.platforms.includes(CDI_PLATFORM_ID) &&
-                CDI_NINTENDO_SLUGS.some(s => game.slug.includes(s));
+        function isCDiTitle(game) {
+            if (!game.platforms) return false;
+            return game.platforms.includes(CDI_PLATFORM_ID);
         }
 
         function isVirtualBoyTitle(game) {
@@ -1187,10 +1205,10 @@
                     score = Math.round(score * PILLAR_MULTIPLIER);
                 }
                 const isUbisoftTitle = game.publishers && game.publishers.some(p => p.toLowerCase().includes('ubisoft'));
-                if (isNintendoIPTitle(game) && (!isAffiliatedPublisher(game) || isUbisoftTitle) && !isCDiNintendoTitle(game)) {
+                if (isNintendoIPTitle(game) && (!isAffiliatedPublisher(game) || isUbisoftTitle) && !isCDiTitle(game)) {
                     score = Math.round(score * NINTENDO_IP_MULTIPLIER);
                 }
-                if (isCDiNintendoTitle(game)) {
+                if (isCDiTitle(game)) {
                     score = Math.round(score * CDI_MULTIPLIER);
                 }
                 if (isVirtualBoyTitle(game)) {
