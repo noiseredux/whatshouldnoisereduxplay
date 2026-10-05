@@ -46,7 +46,7 @@
         <footer>
             Built by noiseredux &nbsp;·&nbsp; Data powered by IGDB <br>
             A personal index for Sony, Nintendo, and Apple collectors — through the lens of a lifelong fanboy. <br>
-            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.7.0</span>
+            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.8.0</span>
         </footer>
     </div>
 
@@ -109,6 +109,20 @@
         // project philosophy as of this version, so the 2.2x figure is calibrated
         // against the real, current scoring behavior rather than a hypothetical
         // unstacked baseline. Supersedes the 1.75x ratio from v7.4.1.
+        //
+        // v9.8.0: Nintendo and Sony affiliated boosts now stack. Previously
+        // displayGames() used if / else-if, so a title matching both lineages
+        // got only the Nintendo 8.25x. That either/or was an accident of the
+        // v7.4.0 split (one shared affiliated list -> two lists, with the old
+        // "fires once" behavior carried over) rather than a stated policy, and
+        // it contradicted the project's stacking philosophy everywhere else
+        // (Pillar on top of Sony, Ubisoft's Sony lineage + Nintendo IP, etc.).
+        // A dual-lineage title now gets 8.25 * 3.75 ~= 30.9x. NOTE: the "Sony"
+        // bucket also holds Apple and the Linux landscape-builders, so
+        // Nintendo + Apple and Nintendo + Linux titles stack too. Untested
+        // starting point — if it overshoots, roll back to else-if or soften
+        // the second-lineage factor. Note the stale reference above to Mario
+        // Kart World getting "3.75x affiliated": first-party Nintendo is 8.25x.
         const NINTENDO_AFFILIATED_MULTIPLIER = 8.25;
         const SONY_AFFILIATED_MULTIPLIER = 3.75;
 
@@ -1191,9 +1205,13 @@
                 if (isMainstreamTitle(game)) {
                     score = Math.round(score * MAINSTREAM_MULTIPLIER);
                 }
+                // v9.8.0: Nintendo and Sony affiliation now STACK instead of
+                // being mutually exclusive. See rationale on
+                // NINTENDO_AFFILIATED_MULTIPLIER's section comment.
                 if (isNintendoAffiliated(game)) {
                     score = Math.round(score * NINTENDO_AFFILIATED_MULTIPLIER);
-                } else if (isSonyAffiliated(game)) {
+                }
+                if (isSonyAffiliated(game)) {
                     score = Math.round(score * SONY_AFFILIATED_MULTIPLIER);
                 }
                 if (isNamcoTitle(game)) {
