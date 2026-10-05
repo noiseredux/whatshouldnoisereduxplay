@@ -46,7 +46,7 @@
         <footer>
             Built by noiseredux &nbsp;·&nbsp; Data powered by IGDB <br>
             A personal index for Sony, Nintendo, and Apple collectors — through the lens of a lifelong fanboy. <br>
-            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.9.0</span>
+            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.9.1</span>
         </footer>
     </div>
 
@@ -1031,8 +1031,16 @@
         // deferred. Untested starting value — check hype-heavy anchors like
         // Splatoon (the reason v9.2.0 chose 0.8) still land top 10-20, and
         // roll back to 0.8/0.2 if they slip.
-        const HYPE_WEIGHT = 0.7;
-        const QUALITY_WEIGHT = 0.3;
+        //
+        // v9.9.1: 70/30 tested live — UFO 50 (2024) rose from #106 to ~#80
+        // (a real but partial gain), Splatoon Raiders (2026) #16, Splatoon 3
+        // (2022) #22, Splatoon 2 (2017) #26 (lower than wanted). Compromised at
+        // 75/25 to recover some of Splatoon 2's position while keeping part of
+        // the UFO 50 gain. Untested; revisit alongside the deferred Steam-
+        // review-count idea, which targets UFO 50's thin-IGDB-data problem
+        // directly rather than through the blend.
+        const HYPE_WEIGHT = 0.75;
+        const QUALITY_WEIGHT = 0.25;
 
 
         // v7.8.0: PopScore (v7.5.0-v7.7.x) has been removed from scoring. It was
