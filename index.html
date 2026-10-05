@@ -46,7 +46,7 @@
         <footer>
             Built by noiseredux &nbsp;·&nbsp; Data powered by IGDB <br>
             A personal index for Sony, Nintendo, and Apple collectors — through the lens of a lifelong fanboy. <br>
-            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.8.0</span>
+            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.9.0</span>
         </footer>
     </div>
 
@@ -1019,8 +1019,20 @@
         // v9.2.0: promoted to live default after A/B testing 50/50, 70/30,
         // and 80/20 against 60/40 — 80/20 best matched gut expectations for
         // hype-heavy franchise titles (e.g. Splatoon) landing top 10-20.
-        const HYPE_WEIGHT = 0.8;
-        const QUALITY_WEIGHT = 0.2;
+        //
+        // v9.9.0: retuned from 0.8/0.2 to 0.7/0.3. Anchor case: UFO 50 (2024)
+        // landed at #106 despite a ~89 critic rating (Metacritic 91). IGDB has
+        // only 30 ratings and 0 follows for it (base score 98), versus 7,000+
+        // Steam reviews that the formula never sees, and it misses the Merit
+        // Badge by 0.67 points (89.33 vs 90). At 0.2 the critic axis could move
+        // a score by at most 20 points, too little to lift a hype-starved
+        // acclaimed title. 0.3 gives it up to 30. Cheap first step; the larger
+        // fix (folding Steam review counts into the base via steamAppId) is
+        // deferred. Untested starting value — check hype-heavy anchors like
+        // Splatoon (the reason v9.2.0 chose 0.8) still land top 10-20, and
+        // roll back to 0.8/0.2 if they slip.
+        const HYPE_WEIGHT = 0.7;
+        const QUALITY_WEIGHT = 0.3;
 
 
         // v7.8.0: PopScore (v7.5.0-v7.7.x) has been removed from scoring. It was
