@@ -56,6 +56,11 @@
         <div class="controls">
             <label>Select Year:</label>
             <select id="yearSelect"></select>
+            <label>Sort By:</label>
+            <select id="sortSelect">
+                <option value="score">Score</option>
+                <option value="date">Release Date (Newest First)</option>
+            </select>
         </div>
         <div id="content"></div>
         <footer>
@@ -175,6 +180,21 @@
             return Math.min(...matches.map(Number));
         }
 
+        // For the "Release Date" sort mode, we need the actual date, not just
+        // the year. Each entry looks like "Sep 18, 2024 (Worldwide [WW])" —
+        // strip the trailing region annotation and parse the rest. Returns
+        // the earliest valid date found (as a timestamp), or null.
+        function extractEarliestDate(releaseDateField) {
+            const dates = parseJsonArrayField(releaseDateField);
+            if (!dates.length) return null;
+            const timestamps = dates
+                .map(d => d.replace(/\s*\(.*\)\s*$/, '').trim())
+                .map(d => Date.parse(d))
+                .filter(t => !isNaN(t));
+            if (!timestamps.length) return null;
+            return Math.min(...timestamps);
+        }
+
         // --- COVER ART -------------------------------------------------------
         // Cache shape in localStorage: { "348977": "abc123", ... } mapping
         // IGDB game ID -> IGDB cover image_id. Covers essentially never change
@@ -223,6 +243,32 @@
             return cache;
         }
 
+        // Sorts every year's game list in place, according to the given mode:
+        //  - 'score': rated games descending by rating; unrated games pushed
+        //    to the bottom, left in their original (CSV) order.
+        //  - 'date': newest release first, oldest last; games with no
+        //    parseable date pushed to the bottom, left in original order.
+        function sortAllYears(mode) {
+            const gamesByYear = window.__gamesByYear || {};
+            Object.keys(gamesByYear).forEach(year => {
+                if (mode === 'date') {
+                    gamesByYear[year].sort((a, b) => {
+                        if (a.releaseDate === null && b.releaseDate === null) return 0;
+                        if (a.releaseDate === null) return 1;
+                        if (b.releaseDate === null) return -1;
+                        return b.releaseDate - a.releaseDate;
+                    });
+                } else {
+                    gamesByYear[year].sort((a, b) => {
+                        if (a.rating === null && b.rating === null) return 0;
+                        if (a.rating === null) return 1;
+                        if (b.rating === null) return -1;
+                        return b.rating - a.rating;
+                    });
+                }
+            });
+        }
+
         // --- LOAD + PARSE ---------------------------------------------------
         async function loadGames() {
             const content = document.getElementById('content');
@@ -249,6 +295,7 @@
                         name: row.game,
                         url: row.url,
                         rating: (rating !== null && !isNaN(rating)) ? rating : null,
+                        releaseDate: extractEarliestDate(row.release_date),
                         platforms: parseJsonArrayField(row.platforms)
                     };
 
@@ -256,18 +303,8 @@
                     gamesByYear[year].push(game);
                 });
 
-                // Sort each year: rated games descending by rating; unrated
-                // games pushed to the bottom, left in their original (CSV) order.
-                Object.keys(gamesByYear).forEach(year => {
-                    gamesByYear[year].sort((a, b) => {
-                        if (a.rating === null && b.rating === null) return 0;
-                        if (a.rating === null) return 1;
-                        if (b.rating === null) return -1;
-                        return b.rating - a.rating;
-                    });
-                });
-
                 window.__gamesByYear = gamesByYear;
+                sortAllYears(document.getElementById('sortSelect').value);
                 populateYearDropdown(Object.keys(gamesByYear).map(Number));
 
                 const select = document.getElementById('yearSelect');
@@ -340,6 +377,12 @@
 
         document.getElementById('yearSelect').addEventListener('change', e => {
             displayGames(window.__gamesByYear[e.target.value] || []);
+        });
+
+        document.getElementById('sortSelect').addEventListener('change', e => {
+            sortAllYears(e.target.value);
+            const year = document.getElementById('yearSelect').value;
+            displayGames(window.__gamesByYear[year] || []);
         });
 
         loadGames();
