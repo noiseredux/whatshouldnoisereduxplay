@@ -210,16 +210,23 @@
             return { start: t, end: new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).getTime(), precise: true };
         }
 
-        // IGDB repeats a release date once per platform/region, so the date
-        // that appears most often is usually the "real" one. On a tie, the
-        // latest of the tied dates wins (placeholder/estimate dates tend to
-        // get corrected forward, not backward). Exact-day dates are preferred;
-        // vaguer entries (month/quarter/year only) are only used when a game
-        // has no exact-day date at all. Returns { start, end } or null.
-        function pickReleaseDate(releaseDateField) {
+        // Picks the release date used for sorting and for the "is it out yet"
+        // check.
+        //  1. Only dates inside the game's assigned year are considered, so a
+        //     later port/remaster (e.g. a 2026 PC release of a 2019 game) can't
+        //     drag the game out of its own year or make it look unreleased.
+        //  2. IGDB repeats a date once per platform/region, so the date that
+        //     appears most often wins.
+        //  3. On a tie, the EARLIEST tied date wins: it's when the game first
+        //     became playable, and later tied dates are usually ports or
+        //     staggered platform launches.
+        // Exact-day dates are preferred; vaguer entries (month/quarter/year
+        // only) are only used when no exact-day date exists in that year.
+        // Returns { start, end } or null.
+        function pickReleaseDate(releaseDateField, year) {
             const parsed = parseJsonArrayField(releaseDateField)
                 .map(parseDateEntry)
-                .filter(Boolean);
+                .filter(p => p && new Date(p.start).getFullYear() === year);
             if (!parsed.length) return null;
 
             const precise = parsed.filter(p => p.precise);
@@ -234,7 +241,7 @@
 
             let best = null;
             counts.forEach(v => {
-                if (!best || v.count > best.count || (v.count === best.count && v.entry.start > best.entry.start)) {
+                if (!best || v.count > best.count || (v.count === best.count && v.entry.start < best.entry.start)) {
                     best = v;
                 }
             });
@@ -320,7 +327,7 @@
                     const year = extractEarliestYear(row.release_date);
                     if (!year) return;
 
-                    const picked = pickReleaseDate(row.release_date);
+                    const picked = pickReleaseDate(row.release_date, year);
 
                     // Hide anything not yet released. Exact-day dates appear
                     // on the day of release; month/quarter/year-only dates
