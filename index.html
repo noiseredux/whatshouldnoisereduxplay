@@ -217,21 +217,29 @@
         //     drag the game out of its own year or make it look unreleased.
         //  2. IGDB repeats a date once per platform/region, so the date that
         //     appears most often wins.
-        //  3. On a tie, we look at how many date entries the game has versus
-        //     how many platforms it lists:
-        //       - More entries than platforms means each platform carries
-        //         several dates, i.e. old estimates/betas that were revised
-        //         (Call of Duty: Modern Warfare 4, Black Ops 7). The LATEST
-        //         tied date is the current one.
-        //       - Otherwise each platform has its own date, i.e. staggered
-        //         launches (Agefield High). The EARLIEST tied date wins,
-        //         because that's when the game first became playable.
+        //  3. On a tie, we check whether the game's dates are revisions or
+        //     staggered launches. Entries are grouped by region label; if any
+        //     one region has more entries than the game has platforms, a
+        //     platform must carry several dates for that same region, which
+        //     means old estimates/betas that were revised (Call of Duty:
+        //     Modern Warfare 4, Black Ops 7). The LATEST tied date is the
+        //     current one. Otherwise the dates are separate regional or
+        //     per-platform launches (Agefield High, Zelda: Spirit Tracks),
+        //     and the EARLIEST tied date wins: it's when the game first
+        //     became playable.
         // Exact-day dates are preferred; vaguer entries (month/quarter/year
         // only) are only used when no exact-day date exists in that year.
         // Returns { start, end } or null.
         function pickReleaseDate(releaseDateField, platformCount, year) {
             const parsed = parseJsonArrayField(releaseDateField)
-                .map(parseDateEntry)
+                .map(e => {
+                    const p = parseDateEntry(e);
+                    if (p) {
+                        const m = String(e).match(/\(([^)]*)\)\s*$/);
+                        p.region = m ? m[1].trim() : '';
+                    }
+                    return p;
+                })
                 .filter(p => p && new Date(p.start).getFullYear() === year);
             if (!parsed.length) return null;
 
@@ -245,7 +253,9 @@
                 else counts.set(p.start, { count: 1, entry: p });
             });
 
-            const preferLatest = pool.length > platformCount;
+            const perRegion = {};
+            pool.forEach(p => { perRegion[p.region] = (perRegion[p.region] || 0) + 1; });
+            const preferLatest = Math.max(...Object.values(perRegion)) > platformCount;
             let best = null;
             counts.forEach(v => {
                 if (!best || v.count > best.count) { best = v; return; }
