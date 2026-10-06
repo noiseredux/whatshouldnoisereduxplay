@@ -30,7 +30,6 @@
         .game-image-container { width: 56px; height: 75px; background: #eee; border-radius: 4px; overflow: hidden; flex-shrink: 0; }
         .game-image { width: 100%; height: 100%; object-fit: cover; }
         .game-title { font-weight: 700; font-size: 1.08rem; color: var(--text); line-height: 1.2; }
-        .engagement-value { color: var(--nin-red); font-weight: 700; }
         .platform-tag { background: #edf2f7; color: #4a5568; font-size: 0.63rem; padding: 2px 7px; border-radius: 4px; margin-right: 4px; text-transform: uppercase; font-weight: 700; border: 1px solid #cbd5e0; }
         footer { padding: 50px; text-align: center; color: var(--text-muted); font-size: 0.8rem; border-top: 1px solid #e2e2ea; }
 
@@ -56,11 +55,6 @@
         <div class="controls">
             <label>Select Year:</label>
             <select id="yearSelect"></select>
-            <label>Sort By:</label>
-            <select id="sortSelect">
-                <option value="score">Score</option>
-                <option value="date">Release Date (Newest First)</option>
-            </select>
         </div>
         <div id="content"></div>
         <footer>
@@ -180,19 +174,71 @@
             return Math.min(...matches.map(Number));
         }
 
-        // For the "Release Date" sort mode, we need the actual date, not just
-        // the year. Each entry looks like "Sep 18, 2024 (Worldwide [WW])" —
-        // strip the trailing region annotation and parse the rest. Returns
-        // the earliest valid date found (as a timestamp), or null.
-        function extractEarliestDate(releaseDateField) {
-            const dates = parseJsonArrayField(releaseDateField);
-            if (!dates.length) return null;
-            const timestamps = dates
-                .map(d => d.replace(/\s*\(.*\)\s*$/, '').trim())
-                .map(d => Date.parse(d))
-                .filter(t => !isNaN(t));
-            if (!timestamps.length) return null;
-            return Math.min(...timestamps);
+        // Turns one release-date entry (e.g. "Sep 18, 2024 (Worldwide [WW])",
+        // "Dec 2004", "2026", "Q4 2026", "TBD") into:
+        //   start   - timestamp used for sorting
+        //   end     - timestamp of the first moment AFTER the period it covers
+        //             (used to decide whether the game is actually out yet)
+        //   precise - true only if it names an exact day
+        // Returns null for entries with no usable date (e.g. "TBD").
+        function parseDateEntry(entry) {
+            const text = String(entry).replace(/\s*\(.*\)\s*$/, '').trim();
+
+            let m = text.match(/^Q([1-4])\s+(\d{4})$/i);
+            if (m) {
+                const q = parseInt(m[1], 10), y = parseInt(m[2], 10);
+                return { start: new Date(y, (q - 1) * 3, 1).getTime(), end: new Date(y, q * 3, 1).getTime(), precise: false };
+            }
+
+            m = text.match(/^(\d{4})$/);
+            if (m) {
+                const y = parseInt(m[1], 10);
+                return { start: new Date(y, 0, 1).getTime(), end: new Date(y + 1, 0, 1).getTime(), precise: false };
+            }
+
+            m = text.match(/^([A-Za-z]{3,9})\s+(\d{4})$/);
+            if (m) {
+                const t = Date.parse(`${m[1]} 1, ${m[2]}`);
+                if (isNaN(t)) return null;
+                const d = new Date(t);
+                return { start: t, end: new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime(), precise: false };
+            }
+
+            const t = Date.parse(text);
+            if (isNaN(t)) return null;
+            const d = new Date(t);
+            return { start: t, end: new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).getTime(), precise: true };
+        }
+
+        // IGDB repeats a release date once per platform/region, so the date
+        // that appears most often is usually the "real" one. On a tie, the
+        // latest of the tied dates wins (placeholder/estimate dates tend to
+        // get corrected forward, not backward). Exact-day dates are preferred;
+        // vaguer entries (month/quarter/year only) are only used when a game
+        // has no exact-day date at all. Returns { start, end } or null.
+        function pickReleaseDate(releaseDateField) {
+            const parsed = parseJsonArrayField(releaseDateField)
+                .map(parseDateEntry)
+                .filter(Boolean);
+            if (!parsed.length) return null;
+
+            const precise = parsed.filter(p => p.precise);
+            const pool = precise.length ? precise : parsed;
+
+            const counts = new Map(); // start timestamp -> { count, entry }
+            pool.forEach(p => {
+                const hit = counts.get(p.start);
+                if (hit) hit.count++;
+                else counts.set(p.start, { count: 1, entry: p });
+            });
+
+            let best = null;
+            counts.forEach(v => {
+                if (!best || v.count > best.count || (v.count === best.count && v.entry.start > best.entry.start)) {
+                    best = v;
+                }
+            });
+            return { start: best.entry.start, end: best.entry.end };
         }
 
         // --- COVER ART -------------------------------------------------------
@@ -243,29 +289,17 @@
             return cache;
         }
 
-        // Sorts every year's game list in place, according to the given mode:
-        //  - 'score': rated games descending by rating; unrated games pushed
-        //    to the bottom, left in their original (CSV) order.
-        //  - 'date': newest release first, oldest last; games with no
-        //    parseable date pushed to the bottom, left in original order.
-        function sortAllYears(mode) {
+        // Sorts every year's game list in place: newest release first,
+        // oldest last. Games with no parseable date go to the bottom.
+        function sortAllYears() {
             const gamesByYear = window.__gamesByYear || {};
             Object.keys(gamesByYear).forEach(year => {
-                if (mode === 'date') {
-                    gamesByYear[year].sort((a, b) => {
-                        if (a.releaseDate === null && b.releaseDate === null) return 0;
-                        if (a.releaseDate === null) return 1;
-                        if (b.releaseDate === null) return -1;
-                        return b.releaseDate - a.releaseDate;
-                    });
-                } else {
-                    gamesByYear[year].sort((a, b) => {
-                        if (a.rating === null && b.rating === null) return 0;
-                        if (a.rating === null) return 1;
-                        if (b.rating === null) return -1;
-                        return b.rating - a.rating;
-                    });
-                }
+                gamesByYear[year].sort((a, b) => {
+                    if (a.releaseDate === null && b.releaseDate === null) return 0;
+                    if (a.releaseDate === null) return 1;
+                    if (b.releaseDate === null) return -1;
+                    return b.releaseDate - a.releaseDate;
+                });
             });
         }
 
@@ -280,13 +314,18 @@
                 const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
 
                 const gamesByYear = {};
+                const now = Date.now();
 
                 parsed.data.forEach(row => {
                     const year = extractEarliestYear(row.release_date);
                     if (!year) return;
 
-                    const ratingRaw = row.rating ? row.rating.trim() : '';
-                    const rating = ratingRaw !== '' ? parseFloat(ratingRaw) : null;
+                    const picked = pickReleaseDate(row.release_date);
+
+                    // Hide anything not yet released. Exact-day dates appear
+                    // on the day of release; month/quarter/year-only dates
+                    // appear once that whole period has passed.
+                    if (!picked || picked.end > now) return;
 
                     const gameId = row.id ? parseInt(row.id, 10) : null;
 
@@ -294,8 +333,7 @@
                         id: (gameId !== null && !isNaN(gameId)) ? gameId : null,
                         name: row.game,
                         url: row.url,
-                        rating: (rating !== null && !isNaN(rating)) ? rating : null,
-                        releaseDate: extractEarliestDate(row.release_date),
+                        releaseDate: picked.start,
                         platforms: parseJsonArrayField(row.platforms)
                     };
 
@@ -304,7 +342,7 @@
                 });
 
                 window.__gamesByYear = gamesByYear;
-                sortAllYears(document.getElementById('sortSelect').value);
+                sortAllYears();
                 populateYearDropdown(Object.keys(gamesByYear).map(Number));
 
                 const select = document.getElementById('yearSelect');
@@ -359,12 +397,7 @@
                     <div class="game-image-container">${coverUrl ? `<img class="game-image" src="${coverUrl}" alt="${escapeHtml(game.name)} cover">` : ''}</div>
                     <div class="game-info">
                         <div class="game-title">${escapeHtml(game.name)}</div>
-                        <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; margin-top:2px;">
-                            ${game.rating !== null
-                                ? `Rating: <span class="engagement-value">${game.rating.toFixed(1)}</span>`
-                                : '<span style="color:#aaa;">Unrated</span>'}
-                        </div>
-                        <div style="margin-top: 4px;">
+                        <div style="margin-top: 6px;">
                             ${game.platforms.map(p => getPlatformAbbr(p)).filter(Boolean).map(abbr => `<span class="platform-tag">${escapeHtml(abbr)}</span>`).join('')}
                         </div>
                     </div>`;
@@ -377,12 +410,6 @@
 
         document.getElementById('yearSelect').addEventListener('change', e => {
             displayGames(window.__gamesByYear[e.target.value] || []);
-        });
-
-        document.getElementById('sortSelect').addEventListener('change', e => {
-            sortAllYears(e.target.value);
-            const year = document.getElementById('yearSelect').value;
-            displayGames(window.__gamesByYear[year] || []);
         });
 
         loadGames();
