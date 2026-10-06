@@ -217,13 +217,19 @@
         //     drag the game out of its own year or make it look unreleased.
         //  2. IGDB repeats a date once per platform/region, so the date that
         //     appears most often wins.
-        //  3. On a tie, the EARLIEST tied date wins: it's when the game first
-        //     became playable, and later tied dates are usually ports or
-        //     staggered platform launches.
+        //  3. On a tie, we look at how many date entries the game has versus
+        //     how many platforms it lists:
+        //       - More entries than platforms means each platform carries
+        //         several dates, i.e. old estimates/betas that were revised
+        //         (Call of Duty: Modern Warfare 4, Black Ops 7). The LATEST
+        //         tied date is the current one.
+        //       - Otherwise each platform has its own date, i.e. staggered
+        //         launches (Agefield High). The EARLIEST tied date wins,
+        //         because that's when the game first became playable.
         // Exact-day dates are preferred; vaguer entries (month/quarter/year
         // only) are only used when no exact-day date exists in that year.
         // Returns { start, end } or null.
-        function pickReleaseDate(releaseDateField, year) {
+        function pickReleaseDate(releaseDateField, platformCount, year) {
             const parsed = parseJsonArrayField(releaseDateField)
                 .map(parseDateEntry)
                 .filter(p => p && new Date(p.start).getFullYear() === year);
@@ -239,10 +245,13 @@
                 else counts.set(p.start, { count: 1, entry: p });
             });
 
+            const preferLatest = pool.length > platformCount;
             let best = null;
             counts.forEach(v => {
-                if (!best || v.count > best.count || (v.count === best.count && v.entry.start < best.entry.start)) {
-                    best = v;
+                if (!best || v.count > best.count) { best = v; return; }
+                if (v.count === best.count) {
+                    const later = v.entry.start > best.entry.start;
+                    if (preferLatest ? later : !later) best = v;
                 }
             });
             return { start: best.entry.start, end: best.entry.end };
@@ -327,7 +336,7 @@
                     const year = extractEarliestYear(row.release_date);
                     if (!year) return;
 
-                    const picked = pickReleaseDate(row.release_date, year);
+                    const picked = pickReleaseDate(row.release_date, parseJsonArrayField(row.platforms).length, year);
 
                     // Hide anything not yet released. Exact-day dates appear
                     // on the day of release; month/quarter/year-only dates
