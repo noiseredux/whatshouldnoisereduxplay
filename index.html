@@ -264,7 +264,7 @@
                     if (preferLatest ? later : !later) best = v;
                 }
             });
-            return { start: best.entry.start, end: best.entry.end };
+            return { start: best.entry.start, end: best.entry.end, precise: best.entry.precise };
         }
 
         // --- COVER ART -------------------------------------------------------
@@ -351,7 +351,7 @@
                     // Hide anything not yet released. Exact-day dates appear
                     // on the day of release; month/quarter/year-only dates
                     // appear once that whole period has passed.
-                    if (!picked || picked.end > now) return;
+                    if (!picked || (picked.precise ? picked.start : picked.end) > now) return;
 
                     const gameId = row.id ? parseInt(row.id, 10) : null;
 
