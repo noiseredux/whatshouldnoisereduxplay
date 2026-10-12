@@ -413,7 +413,7 @@
 
             gamesList.forEach((game, index) => {
                 const card = document.createElement('a');
-                card.className = 'game-card' + (index >= 12 ? ' below-top5' : '');
+                card.className = 'game-card' + (index >= 5 ? ' below-top5' : '');
                 card.href = game.url || '#';
                 card.target = '_blank';
                 const imageId = game.id != null ? coverCache[game.id] : null;
