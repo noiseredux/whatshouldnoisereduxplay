@@ -46,7 +46,7 @@
         <footer>
             Built by noiseredux &nbsp;·&nbsp; Data powered by IGDB <br>
             A personal index for Sony, Nintendo, and Apple collectors — through the lens of a lifelong fanboy. <br>
-            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.9.1</span>
+            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.10.0</span>
         </footer>
     </div>
 
@@ -123,8 +123,19 @@
         // starting point — if it overshoots, roll back to else-if or soften
         // the second-lineage factor. Note the stale reference above to Mario
         // Kart World getting "3.75x affiliated": first-party Nintendo is 8.25x.
+        //
+        // v9.10.0: Apple split out of the Sony bucket into APPLE_AFFILIATED_*, so the
+        // note above about the Sony bucket holding Apple is obsolete (the Linux
+        // landscape-builders still live in the Sony bucket). Nintendo, Sony and
+        // Apple lineage boosts all stack independently.
         const NINTENDO_AFFILIATED_MULTIPLIER = 8.25;
         const SONY_AFFILIATED_MULTIPLIER = 3.75;
+        // v9.10.0: Apple/related is its own bucket with its own multiplier. Set equal
+        // to Sony's rate (3.75) so that, for any title matching only the Apple list,
+        // scoring is unchanged from v9.9.x, when Apple sat inside the Sony bucket.
+        // What changes: a title matching BOTH Apple and Sony (e.g. Sierra + Psygnosis)
+        // now stacks both, per the full-stacking policy. Tune independently from here.
+        const APPLE_AFFILIATED_MULTIPLIER = 3.75;
 
         // v7.0.1: Pillar third-party boost — Square, Enix, Capcom, Konami.
         // These four studios collectively defined the NES era, co-defined the SNES era,
@@ -275,6 +286,8 @@
         // above almost every other third-party competitor. (Acclaim was Nintendo's first
         // American third-party licensee; Until the early 90s, virtually all of Acclaim's 
         // revenue was derived from Nintendo platforms).
+        // v9.10.0 UPDATE: the Apple decision flagged above has now been made — Apple
+        // has its own APPLE_AFFILIATED_* lists and multiplier (see below).
         const NINTENDO_AFFILIATED_PUBLISHERS = [
             // Nintendo lineage
             'nintendo',
@@ -378,7 +391,6 @@
             'sony',
             'csg imagesoft',
             'sony imagesoft',
-            'apple',
             'rac7',
             'cbs electronics',
             'cbs software',
@@ -471,6 +483,66 @@
             'kitty group',
             'technos japan',
 
+            // v7.4.3: Q-Games. Founded by ex-Argonaut programmer Dylan Cuthbert
+            // after his time at Sony Computer Entertainment (where he developed
+            // the influential "ducks in a bath" PS2 tech demo and Blasto).
+            // Q-Games became a genuine second-party partner to Sony — the
+            // PixelJunk series was published on PlayStation Network worldwide,
+            // and Q-Games developed core PS3 OS technology directly for Sony,
+            // including the XMB interface and its visualizers. A fitting
+            // counterpart to the Argonaut/Nintendo entry above: same lineage of
+            // programmer, opposite console family.
+            'q-games',
+
+            // v9.6.0: Linux landscape-builders, placed here on the same logic as
+            // the Apple II era's Broderbund/Sierra/Infocom/Epyx/Sublogic/Muse
+            // Software above — none of these studios had any corporate
+            // relationship with a platform holder, but their catalogs ARE the
+            // canon that made the platform a real place to play games. Linux
+            // itself entered this project's scope in v9.3.0 as an extension of
+            // Sony's own lineage (PS2 Linux Kit, PS3 OtherOS), the same way MSX
+            // and Sharp X1/X68000 sit under Nintendo as early-computer eras — so
+            // Linux's own landscape-builders slot into the SONY bucket here,
+            // not a new standalone tier, for consistency with that placement.
+            // Loki Software (1998-2001, founded by Ryan C. Gordon) was the
+            // first real attempt at commercial Linux gaming, porting Civilization:
+            // Call to Power, Quake III Arena, and SimCity 3000 — genuinely
+            // pioneering work IGDB's raw engagement numbers for that era don't
+            // reflect. Linux Game Publishing carried that same mission forward
+            // through the 2000s (Sacred: Gold, Jets'n'Guns). Feral Interactive
+            // extended the lineage into the 2010s AAA-porting era (Total War,
+            // Tomb Raider, Deus Ex: Mankind Divided, Mad Max, XCOM), proving
+            // complex, high-end titles could run well on Linux.
+            // Explicitly considered and rejected for this entry, after checking
+            // real ranking data (2015: Rocket League #5, Undertale #4, Cities:
+            // Skylines #47 — all already landing exactly where a hit of that
+            // caliber should, no IGDB underrepresentation to correct):
+            // Valve is its own standalone platform-holder tier (see
+            // VALVE_PUBLISHERS/DEVELOPERS below) — it's a peer to Sony, the same
+            // reasoning that already keeps Sega and Namco out of this list.
+            // CodeWeavers builds Proton/Wine but doesn't develop games itself —
+            // there's no catalog for a "developer/publisher" boost to attach to.
+            // Studios that simply ship good native Linux builds in an already-
+            // mature ecosystem (Frictional Games, Wube Software/Factorio, Klei,
+            // Paradox) were left out because their games are already scoring
+            // accurately without correction, and because — unlike every other
+            // multiplier in this project, which traces back to either genuine
+            // historical lineage or an IGDB data-sparsity correction — boosting
+            // them would introduce a third justification (rewarding ongoing
+            // platform-support practice) this project hasn't used anywhere else.
+            'loki',
+            'linux game publishing',
+            'feral interactive'
+        ];
+
+        // v9.10.0: Apple/related is now its own affiliated bucket (previously folded into
+        // SONY_AFFILIATED_*). Contents moved verbatim: the 'apple' entry, the Apple II / early
+        // Mac era publishers, the hardware-bundled pack-in studios, and the DMA Design ->
+        // Rockstar thread. Full rationale for each group is in the comments below.
+        const APPLE_AFFILIATED_PUBLISHERS = [
+            // Apple lineage
+            'apple',
+
             // Apple II / early Mac era defining publishers.
             // These studios defined what Apple computer gaming meant culturally in
             // the same way Capcom and Konami defined the NES era. MECC had a formal
@@ -556,58 +628,7 @@
             // is what pulls in Red Dead Redemption, RDR2, Max Payne 3, Bully, and
             // L.A. Noire — none developed by Rockstar North, all published under
             // this single umbrella.
-            'rockstar games',
-
-            // v7.4.3: Q-Games. Founded by ex-Argonaut programmer Dylan Cuthbert
-            // after his time at Sony Computer Entertainment (where he developed
-            // the influential "ducks in a bath" PS2 tech demo and Blasto).
-            // Q-Games became a genuine second-party partner to Sony — the
-            // PixelJunk series was published on PlayStation Network worldwide,
-            // and Q-Games developed core PS3 OS technology directly for Sony,
-            // including the XMB interface and its visualizers. A fitting
-            // counterpart to the Argonaut/Nintendo entry above: same lineage of
-            // programmer, opposite console family.
-            'q-games',
-
-            // v9.6.0: Linux landscape-builders, placed here on the same logic as
-            // the Apple II era's Broderbund/Sierra/Infocom/Epyx/Sublogic/Muse
-            // Software above — none of these studios had any corporate
-            // relationship with a platform holder, but their catalogs ARE the
-            // canon that made the platform a real place to play games. Linux
-            // itself entered this project's scope in v9.3.0 as an extension of
-            // Sony's own lineage (PS2 Linux Kit, PS3 OtherOS), the same way MSX
-            // and Sharp X1/X68000 sit under Nintendo as early-computer eras — so
-            // Linux's own landscape-builders slot into the SONY bucket here,
-            // not a new standalone tier, for consistency with that placement.
-            // Loki Software (1998-2001, founded by Ryan C. Gordon) was the
-            // first real attempt at commercial Linux gaming, porting Civilization:
-            // Call to Power, Quake III Arena, and SimCity 3000 — genuinely
-            // pioneering work IGDB's raw engagement numbers for that era don't
-            // reflect. Linux Game Publishing carried that same mission forward
-            // through the 2000s (Sacred: Gold, Jets'n'Guns). Feral Interactive
-            // extended the lineage into the 2010s AAA-porting era (Total War,
-            // Tomb Raider, Deus Ex: Mankind Divided, Mad Max, XCOM), proving
-            // complex, high-end titles could run well on Linux.
-            // Explicitly considered and rejected for this entry, after checking
-            // real ranking data (2015: Rocket League #5, Undertale #4, Cities:
-            // Skylines #47 — all already landing exactly where a hit of that
-            // caliber should, no IGDB underrepresentation to correct):
-            // Valve is its own standalone platform-holder tier (see
-            // VALVE_PUBLISHERS/DEVELOPERS below) — it's a peer to Sony, the same
-            // reasoning that already keeps Sega and Namco out of this list.
-            // CodeWeavers builds Proton/Wine but doesn't develop games itself —
-            // there's no catalog for a "developer/publisher" boost to attach to.
-            // Studios that simply ship good native Linux builds in an already-
-            // mature ecosystem (Frictional Games, Wube Software/Factorio, Klei,
-            // Paradox) were left out because their games are already scoring
-            // accurately without correction, and because — unlike every other
-            // multiplier in this project, which traces back to either genuine
-            // historical lineage or an IGDB data-sparsity correction — boosting
-            // them would introduce a third justification (rewarding ongoing
-            // platform-support practice) this project hasn't used anywhere else.
-            'loki',
-            'linux game publishing',
-            'feral interactive'
+            'rockstar games'
         ];
 
         // v5.6.5: Expanded both affiliated lists with the full Nintendo and PlayStation
@@ -698,7 +719,6 @@
         const SONY_AFFILIATED_DEVELOPERS = [
             // Sony lineage
             'sony',
-            'apple',
             'rac7',
             'cbs electronics',
             'cbs software',
@@ -776,6 +796,21 @@
             'kitty group',
             'technos japan',
 
+            // v7.4.3: Q-Games — see rationale in SONY_AFFILIATED_PUBLISHERS above.
+            'q-games',
+
+            // v9.6.0: Linux landscape-builders — see full rationale in
+            // SONY_AFFILIATED_PUBLISHERS above.
+            'loki',
+            'linux game publishing',
+            'feral interactive'
+        ];
+
+        // v9.10.0: developer-side counterpart of APPLE_AFFILIATED_PUBLISHERS.
+        const APPLE_AFFILIATED_DEVELOPERS = [
+            // Apple lineage
+            'apple',
+
             // Apple II / early Mac era defining publishers.
             'mecc',
             'broderbund',
@@ -787,7 +822,7 @@
             'ubisoft',
 
             // v7.7.0: Apple/Mac hardware-bundled game developers — see full
-            // rationale in SONY_AFFILIATED_PUBLISHERS above.
+            // rationale in APPLE_AFFILIATED_PUBLISHERS above.
             'cyan worlds',
             'pangea software',
             'callisto corporation',
@@ -800,18 +835,9 @@
             'disney interactive',
             'dma design',
 
-            // v7.7.1: Rockstar North — see rationale in SONY_AFFILIATED_PUBLISHERS
+            // v7.7.1: Rockstar North — see rationale in APPLE_AFFILIATED_PUBLISHERS
             // above.
-            'rockstar north',
-
-            // v7.4.3: Q-Games — see rationale in SONY_AFFILIATED_PUBLISHERS above.
-            'q-games',
-
-            // v9.6.0: Linux landscape-builders — see full rationale in
-            // SONY_AFFILIATED_PUBLISHERS above.
-            'loki',
-            'linux game publishing',
-            'feral interactive'
+            'rockstar north'
         ];
 
         // v5.4.8: Namco gets its own two-tier boost separate from the general affiliated
@@ -831,7 +857,7 @@
         // mid-pack among affiliated titles without unseating any of them. The
         // 1.5x rate undersold the actual depth of the PS1-era partnership once
         // compared directly against Ubisoft's 3.75x for a looser Apple-lineage
-        // claim (see SONY_AFFILIATED_PUBLISHERS) — Namco's hardware co-development
+        // claim (see APPLE_AFFILIATED_PUBLISHERS) — Namco's hardware co-development
         // history is arguably tighter than that thread, so 1.5x was leaving real
         // value on the table. Stops short of the full Sony-affiliated rate since
         // Namco was still never owned by Sony the way second-party studios were.
@@ -1140,8 +1166,18 @@
             return publisherMatch || developerMatch;
         }
 
+        function isAppleAffiliated(game) {
+            const publisherMatch = game.publishers && game.publishers.some(pub =>
+                APPLE_AFFILIATED_PUBLISHERS.some(aff => pub.toLowerCase().includes(aff))
+            );
+            const developerMatch = game.developers && game.developers.some(dev =>
+                APPLE_AFFILIATED_DEVELOPERS.some(aff => dev.toLowerCase().includes(aff))
+            );
+            return publisherMatch || developerMatch;
+        }
+
         function isAffiliatedPublisher(game) {
-            return isNintendoAffiliated(game) || isSonyAffiliated(game);
+            return isNintendoAffiliated(game) || isSonyAffiliated(game) || isAppleAffiliated(game);
         }
 
         function isCDiTitle(game) {
@@ -1233,6 +1269,9 @@
                 }
                 if (isSonyAffiliated(game)) {
                     score = Math.round(score * SONY_AFFILIATED_MULTIPLIER);
+                }
+                if (isAppleAffiliated(game)) {
+                    score = Math.round(score * APPLE_AFFILIATED_MULTIPLIER);
                 }
                 if (isNamcoTitle(game)) {
                     score = Math.round(score * NAMCO_MULTIPLIER);
