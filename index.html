@@ -46,7 +46,7 @@
         <footer>
             Built by noiseredux &nbsp;·&nbsp; Data powered by IGDB <br>
             A personal index for Sony, Nintendo, and Apple collectors — through the lens of a lifelong fanboy. <br>
-            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.12.4</span>
+            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.12.6</span>
         </footer>
     </div>
 
@@ -917,6 +917,29 @@
         const NAMCO_DEVELOPERS = ['wolf team'];
         const NAMCO_MULTIPLIER = 2.5;
 
+        // v9.12.5: extra nudge for the Namco series that defined the PS1 era, i.e. series
+        // with 3+ entries published on the console: Ace Combat, Tekken, Tales of, Ridge
+        // Racer, Namco Museum (Vols. 1-5) and Point Blank (1-3), plus Time Crisis,
+        // Pac-Man and Smash Court (v9.12.6). Matched on slug fragments,
+        // like NINTENDO_IP_SLUGS, but ONLY for titles that already pass isNamcoTitle(), so
+        // unrelated games sharing a fragment (e.g. "Tales of Monkey Island") are not
+        // caught. It STACKS on top of NAMCO_MULTIPLIER: 2.5 x 1.5 = 3.75, which lands the
+        // whole series at Sony's own affiliated rate. Applies to every entry in these
+        // series regardless of year or platform, same as the Nintendo IP list.
+        const NAMCO_PS1_SERIES_SLUGS = [
+            'ace-combat',
+            'tekken',
+            'tales-of',
+            'ridge-racer',
+            'namco-museum',
+            'point-blank',
+            // v9.12.6: added Time Crisis, Pac-Man and Smash Court.
+            'time-crisis',    // included by judgment: only 2 PS1 releases, below the 3+ bar
+            'pac-man',        // also matches Ms. Pac-Man; does NOT match Pac-Attack/Pac-Mania/Pac-Land
+            'smash-court'     // Smash Court Tennis 1-3 incl. Anna Kournikova's (slug contains it)
+        ];
+        const NAMCO_PS1_SERIES_MULTIPLIER = 1.5;
+
         // v7.9.7: Sega gets its own tier, on the same terms as Namco — a deep,
         // decades-long partner that was never owned by Sony, but whose relationship
         // with Sony specifically (not Nintendo) went well beyond typical third-party
@@ -1159,6 +1182,10 @@
             return publisherMatch || developerMatch;
         }
 
+        function isNamcoPs1Series(game) {
+            if (!game.slug || !isNamcoTitle(game)) return false;
+            return NAMCO_PS1_SERIES_SLUGS.some(s => game.slug.includes(s));
+        }
         // v7.9.7: Sega/Atlus check, same shape as isNamcoTitle — standalone tier,
         // never folded into the Sony affiliated lists. See rationale on
         // SEGA_PUBLISHERS above.
@@ -1319,6 +1346,9 @@
             }
             if (isNamcoTitle(game)) {
                 boost(NAMCO_MULTIPLIER);
+            }
+            if (isNamcoPs1Series(game)) {
+                boost(NAMCO_PS1_SERIES_MULTIPLIER);
             }
             if (isSegaTitle(game)) {
                 boost(SEGA_MULTIPLIER);
