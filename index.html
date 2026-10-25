@@ -46,7 +46,7 @@
         <footer>
             Built by noiseredux &nbsp;·&nbsp; Data powered by IGDB <br>
             A personal index for Sony, Nintendo, and Apple collectors — through the lens of a lifelong fanboy. <br>
-            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.12.2</span>
+            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.12.3</span>
         </footer>
     </div>
 
@@ -1429,7 +1429,7 @@
             // v9.12.0: Evercade visibility floor (see EVERCADE_FLOOR_ENABLED).
             // v9.12.1: applies to EVERCADE titles that score below the target, whether or not
             // they have any engagement, so a game with real engagement is never ranked below
-            // one with none. Engaged titles come first, then zero-engagement ones.
+            // one with none. Engaged titles come first, then zero-engagement ones (ordered by critic score, then earliest release date; see v9.12.3).
             // v9.12.2: lifted titles are STAGGERED instead of tied. They are taken out of
             // the natural ranking and re-inserted one per EVERCADE_STAGGER_SPACING places,
             // starting just below EVERCADE_TARGET_RANK, so non-Evercade games always sit
@@ -1442,8 +1442,15 @@
                 const needed = Math.max(0, EVERCADE_GUARANTEED_COUNT - alreadyUp);
                 const weakEngaged = filtered
                     .filter(game => isEvercadeTitle(game) && game.hype_score < targetScore);
+                // v9.12.3: order zero-engagement titles by critic score (when one exists),
+                // then EARLIEST release date first (the oldest of the year ranks highest),
+                // then name only as a last-resort tie-break; cartridge-mates released on the
+                // same day share a date. Needs backend v5.5.6+ for releaseDate; without it,
+                // dates are missing and ordering falls back to name.
+                const releaseKey = game => (game.releaseDate > 0 ? game.releaseDate : Infinity);
                 const zeroEngagement = [...evercadeCandidates]
                     .sort((a, b) => ((b.aggregatedRating || 0) - (a.aggregatedRating || 0))
+                        || (releaseKey(a) === releaseKey(b) ? 0 : (releaseKey(a) < releaseKey(b) ? -1 : 1))
                         || String(a.name || '').localeCompare(String(b.name || '')));
                 const chosen = [...weakEngaged, ...zeroEngagement].slice(0, needed);
 
