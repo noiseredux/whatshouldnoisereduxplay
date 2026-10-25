@@ -46,7 +46,7 @@
         <footer>
             Built by noiseredux &nbsp;·&nbsp; Data powered by IGDB <br>
             A personal index for Sony, Nintendo, and Apple collectors — through the lens of a lifelong fanboy. <br>
-            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.12.6</span>
+            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.12.7</span>
         </footer>
     </div>
 
@@ -919,8 +919,8 @@
 
         // v9.12.5: extra nudge for the Namco series that defined the PS1 era, i.e. series
         // with 3+ entries published on the console: Ace Combat, Tekken, Tales of, Ridge
-        // Racer, Namco Museum (Vols. 1-5) and Point Blank (1-3), plus Time Crisis,
-        // Pac-Man and Smash Court (v9.12.6). Matched on slug fragments,
+        // Racer, Namco Museum (Vols. 1-5) and Point Blank (1-3), plus Pac-Man and
+        // Smash Court (v9.12.6). Matched on slug fragments,
         // like NINTENDO_IP_SLUGS, but ONLY for titles that already pass isNamcoTitle(), so
         // unrelated games sharing a fragment (e.g. "Tales of Monkey Island") are not
         // caught. It STACKS on top of NAMCO_MULTIPLIER: 2.5 x 1.5 = 3.75, which lands the
@@ -933,8 +933,8 @@
             'ridge-racer',
             'namco-museum',
             'point-blank',
-            // v9.12.6: added Time Crisis, Pac-Man and Smash Court.
-            'time-crisis',    // included by judgment: only 2 PS1 releases, below the 3+ bar
+            // v9.12.6: added Pac-Man and Smash Court. (Time Crisis was added then removed in
+            // v9.12.7: only 2 PS1 releases, below the 3+ bar.)
             'pac-man',        // also matches Ms. Pac-Man; does NOT match Pac-Attack/Pac-Mania/Pac-Land
             'smash-court'     // Smash Court Tennis 1-3 incl. Anna Kournikova's (slug contains it)
         ];
@@ -1459,7 +1459,7 @@
             // v9.12.0: Evercade visibility floor (see EVERCADE_FLOOR_ENABLED).
             // v9.12.1: applies to EVERCADE titles that score below the target, whether or not
             // they have any engagement, so a game with real engagement is never ranked below
-            // one with none. Engaged titles come first, then zero-engagement ones (ordered by critic score, then earliest release date; see v9.12.3).
+            // one with none. Engaged titles come first, then zero-engagement ones (ordered by critic score, then newest release date; see v9.12.7).
             // v9.12.2: lifted titles are STAGGERED instead of tied. They are taken out of
             // the natural ranking and re-inserted one per EVERCADE_STAGGER_SPACING places,
             // starting just below EVERCADE_TARGET_RANK, so non-Evercade games always sit
@@ -1473,14 +1473,15 @@
                 const weakEngaged = filtered
                     .filter(game => isEvercadeTitle(game) && game.hype_score < targetScore);
                 // v9.12.3: order zero-engagement titles by critic score (when one exists),
-                // then EARLIEST release date first (the oldest of the year ranks highest),
-                // then name only as a last-resort tie-break; cartridge-mates released on the
-                // same day share a date. Needs backend v5.5.6+ for releaseDate; without it,
+                // then release date, then name only as a last-resort tie-break; cartridge-
+                // mates released on the same day share a date. v9.12.7: NEWEST first (the
+                // latest release of the year ranks highest; was oldest-first). Undated
+                // titles sort last. Needs backend v5.5.6+ for releaseDate; without it,
                 // dates are missing and ordering falls back to name.
-                const releaseKey = game => (game.releaseDate > 0 ? game.releaseDate : Infinity);
+                const releaseKey = game => (game.releaseDate > 0 ? game.releaseDate : 0);
                 const zeroEngagement = [...evercadeCandidates]
                     .sort((a, b) => ((b.aggregatedRating || 0) - (a.aggregatedRating || 0))
-                        || (releaseKey(a) === releaseKey(b) ? 0 : (releaseKey(a) < releaseKey(b) ? -1 : 1))
+                        || (releaseKey(b) - releaseKey(a))
                         || String(a.name || '').localeCompare(String(b.name || '')));
                 const chosen = [...weakEngaged, ...zeroEngagement].slice(0, needed);
 
