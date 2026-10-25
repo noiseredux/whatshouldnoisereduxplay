@@ -46,7 +46,7 @@
         <footer>
             Built by noiseredux &nbsp;·&nbsp; Data powered by IGDB <br>
             A personal index for Sony, Nintendo, and Apple collectors — through the lens of a lifelong fanboy. <br>
-            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.12.3</span>
+            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.12.4</span>
         </footer>
     </div>
 
@@ -259,13 +259,13 @@
         // all niche retro bundles with ~12 releases/year, so it can't flood the list).
         // Set a number to cap how many Evercade titles per year are guaranteed instead.
         const EVERCADE_GUARANTEED_COUNT = Infinity;
-        // v9.12.1: raised from 15 to 10. All lifted games share one score and sort just
-        // after the game at this rank, so a full year of ~12 Evercade titles occupies
-        // roughly ranks TARGET+1 .. TARGET+12.
-        const EVERCADE_TARGET_RANK = 10;
+        // v9.12.4: lowered to 5 (was 15, then 10) so lifted Evercade titles start higher.
+        // The FIRST lifted title is placed at rank TARGET+1 = #6; the rest follow every
+        // EVERCADE_STAGGER_SPACING places below it.
+        const EVERCADE_TARGET_RANK = 5;
         // v9.12.2: spacing between staggered Evercade titles. 3 = one Evercade game every
         // third place (two other games in between); 2 = alternating; 1 = no stagger at all
-        // (back-to-back). With ~12 titles and the defaults they span roughly ranks 11-44.
+        // (back-to-back). With ~12 titles and the defaults they span roughly ranks 6-39.
         const EVERCADE_STAGGER_SPACING = 3;
         function isEvercadeTitle(game) {
             return !!(game.platforms && game.platforms.includes(EVERCADE_PLATFORM_ID));
