@@ -46,7 +46,7 @@
         <footer>
             Built by noiseredux &nbsp;·&nbsp; Data powered by IGDB <br>
             A personal index for Sony, Nintendo, and Apple collectors — through the lens of a lifelong fanboy. <br>
-            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.12.7</span>
+            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.12.8</span>
         </footer>
     </div>
 
@@ -269,6 +269,24 @@
         const EVERCADE_STAGGER_SPACING = 3;
         function isEvercadeTitle(game) {
             return !!(game.platforms && game.platforms.includes(EVERCADE_PLATFORM_ID));
+        }
+
+        // v9.12.8: Evercade hardware bundles (not games) were slipping through the Evercade
+        // floor. An Evercade title is excluded if its name contains ALL the terms of ANY
+        // rule below (case-insensitive; hyphens/underscores read as spaces). The "alpha"
+        // bartop releases never use the phrase "alpha bartop" ("Alpha Street Fighter
+        // Bartop", "Alpha Mega Man Bartop", ...), hence two separate terms. Scoped to
+        // Evercade titles only, so a non-Evercade game sharing a word is never affected.
+        // Runs in the initial filter, so excluded titles never reach scoring or the
+        // Evercade lift.
+        const EVERCADE_NAME_BLACKLIST = [
+            ['alpha', 'bartop'],
+            ['super pocket']
+        ];
+        function isBlacklistedEvercadeHardware(game) {
+            if (!isEvercadeTitle(game)) return false;
+            const name = String(game.name || '').toLowerCase().replace(/[-_]/g, ' ');
+            return EVERCADE_NAME_BLACKLIST.some(terms => terms.every(term => name.includes(term)));
         }
 
         // v9.11.0: review weighting. The base score is
@@ -1384,7 +1402,7 @@
             let filtered = gamesList.filter(game => {
                 const isCorrectPlatform = game.platforms.some(id => ALLOWED_PLATFORMS.includes(id)) || isConfirmedSteamTitle(game);
                 const isBlacklistedCategory = game.category && BLACKLISTED_CATEGORIES.includes(game.category);
-                return isCorrectPlatform && !isBlacklistedCategory;
+                return isCorrectPlatform && !isBlacklistedCategory && !isBlacklistedEvercadeHardware(game);
             });
 
             // --- Pass 1: hypeScore, exactly the v8.1.0/v8.2.0 pipeline, MINUS
