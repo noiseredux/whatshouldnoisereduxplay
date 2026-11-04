@@ -46,7 +46,7 @@
         <footer>
             Built by noiseredux &nbsp;·&nbsp; Data powered by IGDB <br>
             A personal index for Sony, Nintendo, and Apple collectors — through the lens of a lifelong fanboy. <br>
-            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.13.2</span>
+            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.13.3</span>
         </footer>
     </div>
 
@@ -1228,6 +1228,14 @@
         // false to switch it off.
         const ZEITGEIST_FLOOR_ENABLED = true;
         const ZEITGEIST_SLOT_RANKS = [10, 20];
+        // v9.13.3: OVERFLOW slot(s) for additional Mainstream entries beyond the one-per-
+        // series representatives above, e.g. a year with two Call of Duty games plus Madden.
+        // After the per-series slots are placed, the best-ranked REMAINING Mainstream entry
+        // is moved to the first overflow rank if it sits lower; a second one would take the
+        // next, and so on. If the year has no extra Mainstream entry, nothing happens and
+        // the rank is used by ordinary games as usual. An entry already ranking at or above
+        // its overflow slot is left alone.
+        const ZEITGEIST_EXTRA_SLOT_RANKS = [25];
 
         function isMajorLeagueTitle(game) {
             if (!game.slug) return false;
@@ -1572,20 +1580,30 @@
                 });
                 reps.sort((a, b) => filtered.indexOf(a) - filtered.indexOf(b));
                 const moved = [];
-                reps.forEach((game, i) => {
-                    const slots = ZEITGEIST_SLOT_RANKS;
-                    const slotRank = i < slots.length
-                        ? slots[i]
-                        : slots[slots.length - 1] + (10 * (i - slots.length + 1));
+                const placeAt = (game, slotRank, label) => {
                     const slotIdx = Math.min(slotRank - 1, filtered.length - 1);
                     const currentIdx = filtered.indexOf(game);
                     if (currentIdx <= slotIdx) return;
                     filtered.splice(currentIdx, 1);
                     game.hype_score = filtered[Math.max(slotIdx - 1, 0)].hype_score;
                     filtered.splice(slotIdx, 0, game);
-                    moved.push(`${game.name} #${currentIdx + 1} -> #${slotIdx + 1}`);
+                    moved.push(`${label}${game.name} #${currentIdx + 1} -> #${slotIdx + 1}`);
+                };
+                reps.forEach((game, i) => {
+                    const slots = ZEITGEIST_SLOT_RANKS;
+                    const slotRank = i < slots.length
+                        ? slots[i]
+                        : slots[slots.length - 1] + (10 * (i - slots.length + 1));
+                    placeAt(game, slotRank, '');
                 });
-                console.info(`[zeitgeist floor] ${reps.length} series represented, ${moved.length} moved${moved.length ? ': ' + moved.join('; ') : ''}`);
+                // v9.13.3: overflow slot(s) for extra Mainstream entries (see
+                // ZEITGEIST_EXTRA_SLOT_RANKS). Computed after the reps move, best rank first.
+                const extras = filtered
+                    .filter(game => game.slug && !reps.includes(game)
+                        && MAINSTREAM_TITLE_SLUGS.some(fragment => game.slug.includes(fragment)))
+                    .slice(0, ZEITGEIST_EXTRA_SLOT_RANKS.length);
+                extras.forEach((game, i) => placeAt(game, ZEITGEIST_EXTRA_SLOT_RANKS[i], 'extra: '));
+                console.info(`[zeitgeist floor] ${reps.length} series represented, ${extras.length} extra, ${moved.length} moved${moved.length ? ': ' + moved.join('; ') : ''}`);
             }
 
             const grid = document.createElement('div');
