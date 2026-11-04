@@ -46,7 +46,7 @@
         <footer>
             Built by noiseredux &nbsp;·&nbsp; Data powered by IGDB <br>
             A personal index for Sony, Nintendo, and Apple collectors — through the lens of a lifelong fanboy. <br>
-            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.13.1</span>
+            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.13.2</span>
         </footer>
     </div>
 
@@ -285,6 +285,17 @@
             ['alpha', 'bartop'],
             ['super pocket']
         ];
+        // v9.13.2: Specific games to omit entirely, by IGDB game ID (the number in IGDB's
+        // API; stable, unlike names). Add one line per game: the ID, then a comment saying
+        // why. Excluded in the initial filter, so these never reach scoring, the Evercade
+        // floor or the Zeitgeist floor. Needs backend v5.5.7+, which supplies each game's
+        // `id`; against an older backend nothing is matched and nothing is excluded.
+        const BLACKLISTED_GAME_IDS = new Set([
+            371539, // Neo Geo Arcade duplicate entry (same game as another IGDB ID, same year)
+            371540, // Neo Geo Arcade duplicate entry (same game as another IGDB ID, same year)
+            246090  // Evercade EXP hardware model, not a game release
+        ]);
+
         function isBlacklistedEvercadeHardware(game) {
             if (!isEvercadeTitle(game)) return false;
             const name = String(game.name || '').toLowerCase().replace(/[-_]/g, ' ');
@@ -1432,10 +1443,14 @@
         function displayGames(gamesList) {
             const content = document.getElementById('content');
 
+            const idHits = gamesList.filter(game => BLACKLISTED_GAME_IDS.has(game.id));
+            if (idHits.length) {
+                console.info(`[id blacklist] excluded ${idHits.length}: ${idHits.map(g => `${g.name} (${g.id})`).join('; ')}`);
+            }
             let filtered = gamesList.filter(game => {
                 const isCorrectPlatform = game.platforms.some(id => ALLOWED_PLATFORMS.includes(id)) || isConfirmedSteamTitle(game);
                 const isBlacklistedCategory = game.category && BLACKLISTED_CATEGORIES.includes(game.category);
-                return isCorrectPlatform && !isBlacklistedCategory && !isBlacklistedEvercadeHardware(game);
+                return isCorrectPlatform && !isBlacklistedCategory && !isBlacklistedEvercadeHardware(game) && !BLACKLISTED_GAME_IDS.has(game.id);
             });
 
             // --- Pass 1: hypeScore, exactly the v8.1.0/v8.2.0 pipeline, MINUS
