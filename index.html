@@ -46,7 +46,7 @@
         <footer>
             Built by noiseredux &nbsp;·&nbsp; Data powered by IGDB <br>
             A personal index for Sony, Nintendo, and Apple collectors — through the lens of a lifelong fanboy. <br>
-            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.12.11</span>
+            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.12.12</span>
         </footer>
     </div>
 
@@ -1069,9 +1069,10 @@
             'call-of-duty',
             'madden'
         ];
-        // v9.12.9 TEST: raised 2.0 -> 3.0; v9.12.10 TEST: 4.0; v9.12.11 TEST: 5.0 (Madden
-        // stack becomes 2.5 x 6.5 x 5.0 = 81.25).
-        const MAINSTREAM_MULTIPLIER = 5.0;
+        // v9.12.9 TEST: raised 2.0 -> 3.0; v9.12.10 TEST: 4.0; v9.12.11 TEST: 5.0;
+        // v9.12.12 TEST: 10.0 (deliberate overshoot to find the ceiling, then dial back).
+        // Madden stack becomes 2.5 x 6.5 x 10.0 = 162.5.
+        const MAINSTREAM_MULTIPLIER = 10.0;
 
         // v8.3.0 EXPERIMENT: Critical Darling rearchitected AGAIN — from a
         // multiplier (flat in v8.1.0, then quadratic-and-stacking in v8.2.0)
