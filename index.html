@@ -46,7 +46,7 @@
         <footer>
             Built by noiseredux &nbsp;·&nbsp; Data powered by IGDB <br>
             A personal index for Sony, Nintendo, and Apple collectors — through the lens of a lifelong fanboy. <br>
-            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.12.12</span>
+            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.13.0</span>
         </footer>
     </div>
 
@@ -1194,6 +1194,27 @@
             return MAINSTREAM_TITLE_SLUGS.some(keyword => game.slug.includes(keyword));
         }
 
+        // v9.13.0: ZEITGEIST FLOOR. Call of Duty and Madden are the annual games that are
+        // part of the gaming conversation every year regardless of how their IGDB scores
+        // look, so each year's representative of each Mainstream series is guaranteed a
+        // place near the top. This exists because no multiplier can do it: the final score
+        // is 0.75 x hype percentile + 0.25 x critic percentile, and the hype percentile
+        // caps at 100. A mainstream title already at the cap (e.g. Black Ops 7 and Madden
+        // NFL 26 in 2025) can only be dragged down by a low critic percentile, and a bigger
+        // multiplier changes nothing. So after the normal ranking, the best-ranked entry of
+        // each MAINSTREAM_TITLE_SLUGS series in the year is moved up to a reserved slot if
+        // it ranks lower than that slot. Slots are ZEITGEIST_TARGET_RANK, then every
+        // ZEITGEIST_SPACING places below it, assigned best-natural-rank first, and only to series that actually need
+        // moving. A series whose best entry already ranks at or above its slot is left where it is. Only ONE
+        // entry per series per year is moved (spin-offs and remasters are not).
+        // The displayed score is set to that of the game directly above the slot, so
+        // scores keep reading in non-increasing order down the list. Runs last, after the
+        // Evercade floor, so the slot is the FINAL rank. Set ZEITGEIST_FLOOR_ENABLED to
+        // false to switch it off.
+        const ZEITGEIST_FLOOR_ENABLED = true;
+        const ZEITGEIST_TARGET_RANK = 20;
+        const ZEITGEIST_SPACING = 3;
+
         function isMajorLeagueTitle(game) {
             if (!game.slug) return false;
             return MAJOR_LEAGUE_TITLE_SLUGS.some(keyword => game.slug.includes(keyword));
@@ -1522,6 +1543,29 @@
                     });
                 }
                 console.info(`[evercade floor] ${chosen.length} staggered from rank ${targetIdx + 2}, every ${EVERCADE_STAGGER_SPACING} places (${alreadyUp} Evercade already in top ${targetIdx + 1}; ${weakEngaged.length} engaged + ${zeroEngagement.length} zero-engagement below target)`);
+            }
+
+            // v9.13.0: Zeitgeist floor (see ZEITGEIST_FLOOR_ENABLED).
+            if (ZEITGEIST_FLOOR_ENABLED && filtered.length) {
+                const reps = [];
+                MAINSTREAM_TITLE_SLUGS.forEach(fragment => {
+                    const best = filtered.find(game => game.slug && game.slug.includes(fragment));
+                    if (best && !reps.includes(best)) reps.push(best);
+                });
+                reps.sort((a, b) => filtered.indexOf(a) - filtered.indexOf(b));
+                const moved = [];
+                let slotsUsed = 0; // slots are handed out only to series that actually move
+                reps.forEach(game => {
+                    const slotIdx = Math.min(ZEITGEIST_TARGET_RANK - 1 + (slotsUsed * ZEITGEIST_SPACING), filtered.length - 1);
+                    const currentIdx = filtered.indexOf(game);
+                    if (currentIdx <= slotIdx) return;
+                    filtered.splice(currentIdx, 1);
+                    game.hype_score = filtered[Math.max(slotIdx - 1, 0)].hype_score;
+                    filtered.splice(slotIdx, 0, game);
+                    slotsUsed++;
+                    moved.push(`${game.name} #${currentIdx + 1} -> #${slotIdx + 1}`);
+                });
+                console.info(`[zeitgeist floor] ${reps.length} series represented, ${moved.length} moved${moved.length ? ': ' + moved.join('; ') : ''}`);
             }
 
             const grid = document.createElement('div');
