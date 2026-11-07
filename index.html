@@ -46,7 +46,7 @@
         <footer>
             Built by noiseredux &nbsp;·&nbsp; Data powered by IGDB <br>
             A personal index for Sony, Nintendo, and Apple collectors — through the lens of a lifelong fanboy. <br>
-            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.13.6</span>
+            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.13.7</span>
         </footer>
     </div>
 
@@ -984,7 +984,9 @@
         // the full Namco stack. Matches the same titles as NAMCO_PS1_SERIES_SLUGS (Namco-
         // gated), so any such entry, even one with zero real ratings, now has a score.
         // Set to 0 to disable.
-        const NAMCO_PS1_SERIES_PHANTOM_REVIEWS = 25;
+        // v9.13.7 TEST: raised 25 -> 50 (+150 base points, about +1,875 raw at the full
+        // 12.5x Namco stack).
+        const NAMCO_PS1_SERIES_PHANTOM_REVIEWS = 50;
 
         // v7.9.7: Sega gets its own tier, on the same terms as Namco — a deep,
         // decades-long partner that was never owned by Sony, but whose relationship
