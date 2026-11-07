@@ -46,7 +46,7 @@
         <footer>
             Built by noiseredux &nbsp;·&nbsp; Data powered by IGDB <br>
             A personal index for Sony, Nintendo, and Apple collectors — through the lens of a lifelong fanboy. <br>
-            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.13.10</span>
+            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.14.3</span>
         </footer>
     </div>
 
@@ -91,10 +91,10 @@
             return !!game.steamAppId;
         }
 
-        // v9.10.1: added Intellivision (67, INT), Vectrex (70, VTX), Arcadia 1
-        // (473, 1) and Evercade (309, EC). IDs per IGDB's platform table.
+        // v9.10.1: added Intellivision (67, INT), Vectrex (70, VTX), Arcadia 2001
+        // (473, 2001) and Evercade (309, EC). IDs per IGDB's platform table.
         const ALLOWED_PLATFORMS = [75, 14, 39, 18, 99, 19, 58, 4, 21, 5, 41, 130, 508, 33, 22, 24, 20, 37, 27, 53, 59, 68, 117, 78, 57, 123, 87, 7, 8, 9, 48, 167, 165, 38, 46, 51, 77, 121, 306, 86, 150, 29, 30, 64, 35, 3, 67, 70, 473, 309];
-        const PLATFORM_NAMES = { 75: 'A2', 14: 'Mac', 39: 'iOS', 18: 'NES', 99: 'FC', 19: 'SNES', 58: 'SFC', 4: 'N64', 21: 'GC', 5: 'Wii', 41: 'WiiU', 130: 'NS', 508: 'NS2', 33: 'GB', 22: 'GBC', 24: 'GBA', 20: 'DS', 37: '3DS', 27: 'MSX', 53: 'MSX2', 59: '2600', 68: 'CV', 117: 'CDi', 78: 'SCD', 57: 'WS', 123: 'WSC', 87: 'VB', 7: 'PS1', 8: 'PS2', 9: 'PS3', 48: 'PS4', 167: 'PS5', 165: 'PSVR', 38: 'PSP', 46: 'PSV', 51: 'FDS', 77: 'X1', 121: 'X68k', 306: 'SV', 86: 'TG16', 150: 'TGCD', 29: 'SG', 30: '32X', 64: 'SMS', 35: 'GG', 3: 'LNX', 67: 'INT', 70: 'VTX', 473: '1', 309: 'EC', 6: 'STM' };
+        const PLATFORM_NAMES = { 75: 'A2', 14: 'Mac', 39: 'iOS', 18: 'NES', 99: 'FC', 19: 'SNES', 58: 'SFC', 4: 'N64', 21: 'GC', 5: 'Wii', 41: 'WiiU', 130: 'NS', 508: 'NS2', 33: 'GB', 22: 'GBC', 24: 'GBA', 20: 'DS', 37: '3DS', 27: 'MSX', 53: 'MSX2', 59: '2600', 68: 'CV', 117: 'CDi', 78: 'SCD', 57: 'WS', 123: 'WSC', 87: 'VB', 7: 'PS1', 8: 'PS2', 9: 'PS3', 48: 'PS4', 167: 'PS5', 165: 'PSVR', 38: 'PSP', 46: 'PSV', 51: 'FDS', 77: 'X1', 121: 'X68k', 306: 'SV', 86: 'TG16', 150: 'TGCD', 29: 'SG', 30: '32X', 64: 'SMS', 35: 'GG', 3: 'LNX', 67: 'INT', 70: 'VTX', 473: '2001', 309: 'EC', 6: 'STM' };
 
         // --- Scoring constants ---
         const GENRE_SPORT_ID = 14;
@@ -581,12 +581,12 @@
             // and Sharp X1/X68000 sit under Nintendo as early-computer eras — so
             // Linux's own landscape-builders slot into the SONY bucket here,
             // not a new standalone tier, for consistency with that placement.
-            // Loki Software (1998-1, founded by Ryan C. Gordon) was the
+            // Loki Software (1998-2001, founded by Ryan C. Gordon) was the
             // first real attempt at commercial Linux gaming, porting Civilization:
             // Call to Power, Quake III Arena, and SimCity 3000 — genuinely
             // pioneering work IGDB's raw engagement numbers for that era don't
             // reflect. Linux Game Publishing carried that same mission forward
-            // through the 0s (Sacred: Gold, Jets'n'Guns). Feral Interactive
+            // through the 2000s (Sacred: Gold, Jets'n'Guns). Feral Interactive
             // extended the lineage into the 2010s AAA-porting era (Total War,
             // Tomb Raider, Deus Ex: Mankind Divided, Mad Max, XCOM), proving
             // complex, high-end titles could run well on Linux.
@@ -648,7 +648,7 @@
             // Performa and Power Macintosh models starting 1993-94 — notable given
             // Myst itself was built in HyperCard, an Apple technology. Pangea
             // Software is the strongest case: Apple signed a formal deal with them
-            // in 1995 to bundle their games with new Macs, lasting until the 6
+            // in 1995 to bundle their games with new Macs, lasting until the 2006
             // Intel transition (Power Pete, later Bugdom, Nanosaur, Cro-Mag Rally,
             // Otto Matic). Callisto Corporation (Spin Doctor, Super Maze Wars) and
             // Velocity (Spectre, Spectre Supreme, developed by Peninsula Gameworks
@@ -678,7 +678,7 @@
             'disney interactive',
             'dma design',
 
-            // v7.7.1: Rockstar North — DMA Design's later identity after its 2
+            // v7.7.1: Rockstar North — DMA Design's later identity after its 2002
             // rename. Per project philosophy applied consistently everywhere else
             // (Rare, FromSoftware, PlatinumGames, etc.): once a studio's lineage
             // earns a place in the Apple/Nintendo/Sony story, that thread is
@@ -950,8 +950,9 @@
 
         // v9.12.5: extra nudge for the Namco series that defined the PS1 era, i.e. series
         // with 3+ entries published on the console: Ace Combat, Tekken, Tales of, Ridge
-        // Racer, Namco Museum (Vols. 1-5) and Point Blank (1-3), plus Pac-Man and
-        // Smash Court (v9.12.6). Matched on slug fragments,
+        // Racer and Point Blank (1-3), plus Pac-Man and Smash Court (v9.12.6).
+        // v9.14.2: Namco Museum REMOVED. It has 3+ PS1 entries, but they are compilations,
+        // not a game series, so it keeps only the base Namco boost. Matched on slug fragments,
         // like NINTENDO_IP_SLUGS, but ONLY for titles that already pass isNamcoTitle(), so
         // unrelated games sharing a fragment (e.g. "Tales of Monkey Island") are not
         // caught. It STACKS on top of NAMCO_MULTIPLIER: 2.5 x 1.5 = 3.75, which lands the
@@ -962,7 +963,6 @@
             'tekken',
             'tales-of',
             'ridge-racer',
-            'namco-museum',
             'point-blank',
             // v9.12.6: added Pac-Man and Smash Court. (Time Crisis was added then removed in
             // v9.12.7: only 2 PS1 releases, below the 3+ bar.)
@@ -997,11 +997,67 @@
         // 100 -> -36%, 300 -> -51%. That is the intended shape: low-engagement entries
         // lifted, high-engagement ones trimmed.
         // v9.13.10 TEST: raised 100 -> 150 (old low-engagement entries were still too low).
-        // v9.13.11 TEST: 200 pushed Ace Combat 8 back to #1 in 2026. v9.13.12 TEST: 175 to
-        // bracket it. If AC8 is still #1 at 175, 150 is the keeper. Absolute lift for an entry
-        // with no real ratings: 175 x 3 x 5.0 = 2,625 raw. Crossover vs the old 5.0x/+25
-        // setup is ~70 real reviews.
+        // v9.13.11 tested 200 and v9.13.12 tested 175: both pushed Ace Combat 8 to #1 in 2026.
+        // v9.13.13: back to 150, the best value found (not perfect). Absolute lift for an
+        // entry with no real ratings: 150 x 3 x 5.0 = 2,250 raw; crossover vs the old
+        // 5.0x/+25 setup is ~58 real reviews.
         const NAMCO_PS1_SERIES_PHANTOM_REVIEWS = 150;
+
+        // v9.14.0: ERA PHASES. Engagement on IGDB thins out the further back you go (IGDB
+        // launched in 2014 and users reviewed back to about 2012; PS3/Wii in 2005 had more
+        // engagement than anything before), so older years get stronger boosts. Years are
+        // ranked against themselves, so a flat multiplier on a whole year would change
+        // nothing; what an old-era phase does is make the affiliation/franchise boosts hit
+        // harder relative to organic engagement. Each phase has two settings:
+        //   strength: an EXPONENT applied to every multiplier in the affiliation boost chain
+        //     (Nintendo, Sony, Apple, Namco, Sega, Valve, Pillar, Sport, Major League,
+        //     Mainstream, Nintendo IP, CD-i, VB, WS, Digital Pictures). 1.0 = unchanged;
+        //     8.25x at 1.3 becomes 15.5x. Games with no boost are unaffected (1^n = 1), and
+        //     a stack gives the same result whether the exponent is applied per boost or to
+        //     the product. The Merit Badge is not part of this chain and is unchanged.
+        //   phantomReviews: Namco PS1-series phantom reviews (see above) for that phase.
+        // The newest phase (2012 onward) is pinned to the existing settings so current
+        // years are untouched. Older strengths/phantoms are first-pass guesses to tune.
+        // List newest first; the first phase whose fromYear <= the year wins.
+        // v9.14.3: THREE CLEAR PHASES, with only two sets of numbers to tune.
+        //   ERA_CURRENT (2012-present): pinned to the existing settings; current years are
+        //     untouched.
+        //   ERA_OLDEST (1977-2004): the hardest boost. This is the one being tuned.
+        //   ERA_MIDDLE (2005-2011): NOT hand-set. It is computed as the midpoint (simple
+        //     average) of each setting in ERA_CURRENT and ERA_OLDEST, so it follows
+        //     automatically whenever the oldest phase is changed. (Averaging the settings
+        //     gives effective multipliers close to the geometric middle, since strength is
+        //     an exponent.)
+        // Settings: strength = exponent on every multiplier in the affiliation chain (1.0 =
+        // unchanged); phantomReviews and namcoSeriesMultiplier = the Namco PS1-series
+        // phantom reviews and nudge for that phase. History for the oldest phase: Namco
+        // series multiplier 3.0 (v9.14.1: Tales of Phantasia 1995 #26 -> #23, score 82),
+        // 4.0 (v9.14.2: #22, score 83); target is a score of about 84-85. v9.14.3 TEST: 6.0,
+        // since returns per step are thinning (+69% raw moved 3 ranks, +45% moved 1).
+        const ERA_CURRENT = {
+            strength: 1.0,
+            phantomReviews: NAMCO_PS1_SERIES_PHANTOM_REVIEWS,
+            namcoSeriesMultiplier: NAMCO_PS1_SERIES_MULTIPLIER
+        };
+        const ERA_OLDEST = {
+            strength: 1.3,
+            phantomReviews: 200,
+            namcoSeriesMultiplier: 6.0
+        };
+        const ERA_MIDDLE = {
+            strength: (ERA_CURRENT.strength + ERA_OLDEST.strength) / 2,
+            phantomReviews: (ERA_CURRENT.phantomReviews + ERA_OLDEST.phantomReviews) / 2,
+            namcoSeriesMultiplier: (ERA_CURRENT.namcoSeriesMultiplier + ERA_OLDEST.namcoSeriesMultiplier) / 2
+        };
+        const ERA_PHASES = [
+            { name: '2012-present', fromYear: 2012, ...ERA_CURRENT },
+            { name: '2005-2011',    fromYear: 2005, ...ERA_MIDDLE },
+            { name: '1977-2004',    fromYear: 0,    ...ERA_OLDEST }
+        ];
+        function eraPhaseForYear(year) {
+            if (!Number.isFinite(year)) return ERA_PHASES[0];
+            return ERA_PHASES.find(phase => year >= phase.fromYear) || ERA_PHASES[0];
+        }
 
         // v7.9.7: Sega gets its own tier, on the same terms as Namco — a deep,
         // decades-long partner that was never owned by Sony, but whose relationship
@@ -1414,11 +1470,12 @@
         // per-step rounding are unchanged. The Merit Badge is deliberately NOT part of
         // this chain or of the "boosted" test: it is critic-driven, so counting it would
         // double-dip on the critic weighting.
-        function applyAffiliationBoosts(game, startScore) {
+        function applyAffiliationBoosts(game, startScore, strength = 1, namcoSeriesMultiplier = NAMCO_PS1_SERIES_MULTIPLIER) {
             let score = startScore;
             let boosted = false;
             const boost = (multiplier) => {
-                score = Math.round(score * multiplier);
+                // v9.14.0: era strength is an exponent on every multiplier in the chain.
+                score = Math.round(score * Math.pow(multiplier, strength));
                 boosted = true;
             };
             if (game.genres && game.genres.includes(GENRE_SPORT_ID)) {
@@ -1446,7 +1503,7 @@
                 boost(NAMCO_MULTIPLIER);
             }
             if (isNamcoPs1Series(game)) {
-                boost(NAMCO_PS1_SERIES_MULTIPLIER);
+                boost(namcoSeriesMultiplier);
             }
             if (isSegaTitle(game)) {
                 boost(SEGA_MULTIPLIER);
@@ -1476,7 +1533,7 @@
             return { score, boosted };
         }
 
-        function displayGames(gamesList) {
+        function displayGames(gamesList, year) {
             const content = document.getElementById('content');
 
             const idHits = gamesList.filter(game => BLACKLISTED_GAME_IDS.has(game.id));
@@ -1493,12 +1550,15 @@
             // Critical Darling. Every other multiplier (sports/major league/
             // mainstream/affiliated/Namco/Sega/Pillar/Nintendo IP/CDI/VB/WS/
             // Digital Pictures/Merit Badge) still applies unchanged.
+            // v9.14.0: era phase for the selected year (see ERA_PHASES).
+            const eraPhase = eraPhaseForYear(year);
+            console.info(`[era phase] ${year}: ${eraPhase.name}, boost strength ${eraPhase.strength}, phantom reviews ${eraPhase.phantomReviews}, Namco series x${eraPhase.namcoSeriesMultiplier}`);
             filtered.forEach(game => {
                 let score;
 
                 // v9.11.0: critic/user review weighting (see REVIEW_WEIGHT below). The
                 // probe call only determines whether any boost applies to this game.
-                const probe = applyAffiliationBoosts(game, 1);
+                const probe = applyAffiliationBoosts(game, 1, eraPhase.strength, eraPhase.namcoSeriesMultiplier);
                 let reviewUnits;
                 if (game.criticReviews !== undefined) {
                     const criticUnits = probe.boosted
@@ -1511,10 +1571,10 @@
                 }
                 // v9.13.6: phantom reviews for Namco PS1-series titles (see constant).
                 if (isNamcoPs1Series(game)) {
-                    reviewUnits += NAMCO_PS1_SERIES_PHANTOM_REVIEWS;
+                    reviewUnits += eraPhase.phantomReviews;
                 }
                 score = (reviewUnits * REVIEW_WEIGHT) + (game.follows || 0) + (game.hypes || 0);
-                score = applyAffiliationBoosts(game, score).score;
+                score = applyAffiliationBoosts(game, score, eraPhase.strength, eraPhase.namcoSeriesMultiplier).score;
                 if ((game.aggregatedRating || 0) >= MERIT_BADGE_THRESHOLD) {
                     score = Math.round(score * MERIT_BADGE_MULTIPLIER);
                 }
@@ -1672,7 +1732,7 @@
             try {
                 const response = await fetch(`${GOOGLE_SCRIPT_URL}?year=${year}&_cb=${Date.now()}`);
                 const data = await response.json();
-                displayGames(data.games || []);
+                displayGames(data.games || [], parseInt(year));
             } catch (e) {
                 console.error(e);
                 content.innerHTML = `<div class="loading" style="color:red">System Connection Error.</div>`;
