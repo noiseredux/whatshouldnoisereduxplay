@@ -46,7 +46,7 @@
         <footer>
             Built by noiseredux &nbsp;·&nbsp; Data powered by IGDB <br>
             A personal index for Sony, Nintendo, and Apple collectors — through the lens of a lifelong fanboy. <br>
-            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.13.5</span>
+            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.13.6</span>
         </footer>
     </div>
 
@@ -976,6 +976,16 @@
         // alone.
         const NAMCO_PS1_SERIES_MULTIPLIER = 5.0;
 
+        // v9.13.6 TEST: PHANTOM REVIEWS for Namco PS1-series titles. A multiplier scales
+        // whatever base a game has, so a series entry with little IGDB engagement stays low
+        // even at 12.5x (12.5 x a small number is still small). These phantom reviews are
+        // added to the review count BEFORE the review weight (x3) and the whole boost chain,
+        // so they raise the base itself: +25 reviews = +75 base points, about +940 raw at
+        // the full Namco stack. Matches the same titles as NAMCO_PS1_SERIES_SLUGS (Namco-
+        // gated), so any such entry, even one with zero real ratings, now has a score.
+        // Set to 0 to disable.
+        const NAMCO_PS1_SERIES_PHANTOM_REVIEWS = 25;
+
         // v7.9.7: Sega gets its own tier, on the same terms as Namco — a deep,
         // decades-long partner that was never owned by Sony, but whose relationship
         // with Sony specifically (not Nintendo) went well beyond typical third-party
@@ -1481,6 +1491,10 @@
                 } else {
                     // Older backend (pre-v5.5.4) with no critic/user split: legacy formula.
                     reviewUnits = game.reviews || 0;
+                }
+                // v9.13.6: phantom reviews for Namco PS1-series titles (see constant).
+                if (isNamcoPs1Series(game)) {
+                    reviewUnits += NAMCO_PS1_SERIES_PHANTOM_REVIEWS;
                 }
                 score = (reviewUnits * REVIEW_WEIGHT) + (game.follows || 0) + (game.hypes || 0);
                 score = applyAffiliationBoosts(game, score).score;
