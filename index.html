@@ -46,7 +46,7 @@
         <footer>
             Built by noiseredux &nbsp;·&nbsp; Data powered by IGDB <br>
             A personal index for Sony, Nintendo, and Apple collectors — through the lens of a lifelong fanboy. <br>
-            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.13.12</span>
+            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.13.10</span>
         </footer>
     </div>
 
@@ -91,10 +91,10 @@
             return !!game.steamAppId;
         }
 
-        // v9.10.1: added Intellivision (67, INT), Vectrex (70, VTX), Arcadia 2001
-        // (473, 2001) and Evercade (309, EC). IDs per IGDB's platform table.
+        // v9.10.1: added Intellivision (67, INT), Vectrex (70, VTX), Arcadia 1
+        // (473, 1) and Evercade (309, EC). IDs per IGDB's platform table.
         const ALLOWED_PLATFORMS = [75, 14, 39, 18, 99, 19, 58, 4, 21, 5, 41, 130, 508, 33, 22, 24, 20, 37, 27, 53, 59, 68, 117, 78, 57, 123, 87, 7, 8, 9, 48, 167, 165, 38, 46, 51, 77, 121, 306, 86, 150, 29, 30, 64, 35, 3, 67, 70, 473, 309];
-        const PLATFORM_NAMES = { 75: 'A2', 14: 'Mac', 39: 'iOS', 18: 'NES', 99: 'FC', 19: 'SNES', 58: 'SFC', 4: 'N64', 21: 'GC', 5: 'Wii', 41: 'WiiU', 130: 'NS', 508: 'NS2', 33: 'GB', 22: 'GBC', 24: 'GBA', 20: 'DS', 37: '3DS', 27: 'MSX', 53: 'MSX2', 59: '2600', 68: 'CV', 117: 'CDi', 78: 'SCD', 57: 'WS', 123: 'WSC', 87: 'VB', 7: 'PS1', 8: 'PS2', 9: 'PS3', 48: 'PS4', 167: 'PS5', 165: 'PSVR', 38: 'PSP', 46: 'PSV', 51: 'FDS', 77: 'X1', 121: 'X68k', 306: 'SV', 86: 'TG16', 150: 'TGCD', 29: 'SG', 30: '32X', 64: 'SMS', 35: 'GG', 3: 'LNX', 67: 'INT', 70: 'VTX', 473: '2001', 309: 'EC', 6: 'STM' };
+        const PLATFORM_NAMES = { 75: 'A2', 14: 'Mac', 39: 'iOS', 18: 'NES', 99: 'FC', 19: 'SNES', 58: 'SFC', 4: 'N64', 21: 'GC', 5: 'Wii', 41: 'WiiU', 130: 'NS', 508: 'NS2', 33: 'GB', 22: 'GBC', 24: 'GBA', 20: 'DS', 37: '3DS', 27: 'MSX', 53: 'MSX2', 59: '2600', 68: 'CV', 117: 'CDi', 78: 'SCD', 57: 'WS', 123: 'WSC', 87: 'VB', 7: 'PS1', 8: 'PS2', 9: 'PS3', 48: 'PS4', 167: 'PS5', 165: 'PSVR', 38: 'PSP', 46: 'PSV', 51: 'FDS', 77: 'X1', 121: 'X68k', 306: 'SV', 86: 'TG16', 150: 'TGCD', 29: 'SG', 30: '32X', 64: 'SMS', 35: 'GG', 3: 'LNX', 67: 'INT', 70: 'VTX', 473: '1', 309: 'EC', 6: 'STM' };
 
         // --- Scoring constants ---
         const GENRE_SPORT_ID = 14;
@@ -581,12 +581,12 @@
             // and Sharp X1/X68000 sit under Nintendo as early-computer eras — so
             // Linux's own landscape-builders slot into the SONY bucket here,
             // not a new standalone tier, for consistency with that placement.
-            // Loki Software (1998-2001, founded by Ryan C. Gordon) was the
+            // Loki Software (1998-1, founded by Ryan C. Gordon) was the
             // first real attempt at commercial Linux gaming, porting Civilization:
             // Call to Power, Quake III Arena, and SimCity 3000 — genuinely
             // pioneering work IGDB's raw engagement numbers for that era don't
             // reflect. Linux Game Publishing carried that same mission forward
-            // through the 2000s (Sacred: Gold, Jets'n'Guns). Feral Interactive
+            // through the 0s (Sacred: Gold, Jets'n'Guns). Feral Interactive
             // extended the lineage into the 2010s AAA-porting era (Total War,
             // Tomb Raider, Deus Ex: Mankind Divided, Mad Max, XCOM), proving
             // complex, high-end titles could run well on Linux.
@@ -648,7 +648,7 @@
             // Performa and Power Macintosh models starting 1993-94 — notable given
             // Myst itself was built in HyperCard, an Apple technology. Pangea
             // Software is the strongest case: Apple signed a formal deal with them
-            // in 1995 to bundle their games with new Macs, lasting until the 2006
+            // in 1995 to bundle their games with new Macs, lasting until the 6
             // Intel transition (Power Pete, later Bugdom, Nanosaur, Cro-Mag Rally,
             // Otto Matic). Callisto Corporation (Spin Doctor, Super Maze Wars) and
             // Velocity (Spectre, Spectre Supreme, developed by Peninsula Gameworks
@@ -678,7 +678,7 @@
             'disney interactive',
             'dma design',
 
-            // v7.7.1: Rockstar North — DMA Design's later identity after its 2002
+            // v7.7.1: Rockstar North — DMA Design's later identity after its 2
             // rename. Per project philosophy applied consistently everywhere else
             // (Rare, FromSoftware, PlatinumGames, etc.): once a studio's lineage
             // earns a place in the Apple/Nintendo/Sony story, that thread is
@@ -1001,7 +1001,7 @@
         // bracket it. If AC8 is still #1 at 175, 150 is the keeper. Absolute lift for an entry
         // with no real ratings: 175 x 3 x 5.0 = 2,625 raw. Crossover vs the old 5.0x/+25
         // setup is ~70 real reviews.
-        const NAMCO_PS1_SERIES_PHANTOM_REVIEWS = 175;
+        const NAMCO_PS1_SERIES_PHANTOM_REVIEWS = 150;
 
         // v7.9.7: Sega gets its own tier, on the same terms as Namco — a deep,
         // decades-long partner that was never owned by Sony, but whose relationship
