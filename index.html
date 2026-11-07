@@ -46,7 +46,7 @@
         <footer>
             Built by noiseredux &nbsp;·&nbsp; Data powered by IGDB <br>
             A personal index for Sony, Nintendo, and Apple collectors — through the lens of a lifelong fanboy. <br>
-            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.13.10</span>
+            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.13.11</span>
         </footer>
     </div>
 
@@ -997,9 +997,10 @@
         // 100 -> -36%, 300 -> -51%. That is the intended shape: low-engagement entries
         // lifted, high-engagement ones trimmed.
         // v9.13.10 TEST: raised 100 -> 150 (old low-engagement entries were still too low).
-        // Absolute lift for an entry with no real ratings: 150 x 3 x 5.0 = 2,250 raw.
-        // Crossover vs the old 5.0x/+25 setup moves from ~30 to ~58 real reviews.
-        const NAMCO_PS1_SERIES_PHANTOM_REVIEWS = 150;
+        // v9.13.11 TEST: 200, to confirm 150 wasn't just short of the sweet spot. Absolute
+        // lift for an entry with no real ratings: 200 x 3 x 5.0 = 3,000 raw. Crossover vs the
+        // old 5.0x/+25 setup is ~83 real reviews.
+        const NAMCO_PS1_SERIES_PHANTOM_REVIEWS = 200;
 
         // v7.9.7: Sega gets its own tier, on the same terms as Namco — a deep,
         // decades-long partner that was never owned by Sony, but whose relationship
