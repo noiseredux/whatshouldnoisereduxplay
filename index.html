@@ -46,7 +46,7 @@
         <footer>
             Built by noiseredux &nbsp;·&nbsp; Data powered by IGDB <br>
             A personal index for Sony, Nintendo, and Apple collectors — through the lens of a lifelong fanboy. <br>
-            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.15.0</span>
+            <span style="font-size:0.7rem; letter-spacing:0.2em; opacity:0.7;">Version 9.15.1</span>
         </footer>
     </div>
 
@@ -1342,6 +1342,37 @@
             return MAINSTREAM_TITLE_SLUGS.some(keyword => game.slug.includes(keyword));
         }
 
+        // v9.15.1: PINNED GAMES. Specific, celebrated games whose IGDB data badly understates
+        // their place in gaming history (e.g. P.T., Kojima's Playable Teaser: free, delisted
+        // and with no critic scores, so it ranked #85 in 2014). Each is guaranteed a slot at
+        // or above `rank` in the year it was released, using the same move-up logic as the
+        // other floors: a pinned game already ranked at or above its slot is left where it
+        // is; otherwise it is moved to the slot and shows the score of the game directly
+        // above it. Runs after the Evercade/Polymega floors and BEFORE the Zeitgeist floor,
+        // so the Zeitgeist slots (#10/#20/#25) stay exact and a pinned game can end up a
+        // place or two below its rank when a Zeitgeist title is inserted above it.
+        // A pin matches a game when ALL of its fields match: id (IGDB game ID), slug
+        // (exact), names (any one, ignoring case and punctuation), developer (substring of
+        // any developer name, ignoring case). Include at least one field. Needs backend
+        // v5.5.7+ for `id`. A pin that matches nothing in the loaded year does nothing.
+        const PINNED_GAMES = [
+            { label: 'P.T. (Kojima Productions, 2014)',
+              names: ['P.T.', 'P.T. (Playable Teaser)', 'Silent Hills P.T.'],
+              developer: 'kojima productions',
+              rank: 15 }
+        ];
+        function normalizePinName(name) {
+            return String(name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        }
+        function pinMatchesGame(pin, game) {
+            if (pin.id === undefined && !pin.slug && !pin.names && !pin.developer) return false;
+            if (pin.id !== undefined && game.id !== pin.id) return false;
+            if (pin.slug && game.slug !== pin.slug) return false;
+            if (pin.names && !pin.names.some(n => normalizePinName(n) === normalizePinName(game.name))) return false;
+            if (pin.developer && !(game.developers || []).some(d => String(d).toLowerCase().includes(pin.developer))) return false;
+            return true;
+        }
+
         // v9.13.0: ZEITGEIST FLOOR. Call of Duty and Madden are the annual games that are
         // part of the gaming conversation every year regardless of how their IGDB scores
         // look, so each year's representative of each Mainstream series is guaranteed a
@@ -1705,6 +1736,19 @@
                     guaranteedCount: POLYMEGA_GUARANTEED_COUNT
                 });
             }
+
+            // v9.15.1: pinned games (see PINNED_GAMES).
+            PINNED_GAMES.forEach(pin => {
+                const game = filtered.find(g => pinMatchesGame(pin, g));
+                if (!game) return;
+                const slotIdx = Math.min(pin.rank - 1, filtered.length - 1);
+                const currentIdx = filtered.indexOf(game);
+                if (currentIdx <= slotIdx) return;
+                filtered.splice(currentIdx, 1);
+                game.hype_score = filtered[Math.max(slotIdx - 1, 0)].hype_score;
+                filtered.splice(slotIdx, 0, game);
+                console.info(`[pinned] ${pin.label}: ${game.name} #${currentIdx + 1} -> #${slotIdx + 1}`);
+            });
 
             // v9.13.0: Zeitgeist floor (see ZEITGEIST_FLOOR_ENABLED).
             if (ZEITGEIST_FLOOR_ENABLED && filtered.length) {
